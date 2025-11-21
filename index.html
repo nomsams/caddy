@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dust Container Designer - Engineering Spec V1</title>
+    
+    <!-- Three.js and Dependencies -->
+    <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js"></script>
+    <script src="https://unpkg.com/three@0.160.0/examples/jsm/loaders/STLLoader.js"></script>
+    <script src="https://unpkg.com/three@0.160.0/examples/jsm/exporters/STLExporter.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --panel-bg: #ffffff;
+            --text-color: #333;
+            --accent-color: #007bff;
+            --border-color: #ccc;
+            --log-bg: #222;
+            --log-text: #0f0;
+        }
+
+        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-color); display: flex; height: 100vh; }
+        
+        /* Layout */
+        #sidebar { width: 320px; background: var(--panel-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; z-index: 10; overflow-y: auto; box-shadow: 2px 0 5px rgba(0,0,0,0.1); }
+        #main-view { flex-grow: 1; position: relative; background: #e0e0e0; /* Concrete gray base */ }
+        #log-panel { position: absolute; bottom: 0; left: 320px; right: 0; background: var(--log-bg); color: var(--log-text); font-family: monospace; font-size: 12px; transition: height 0.3s; z-index: 20; display: flex; flex-direction: column; }
+        
+        /* Sidebar Components */
+        .panel-header { padding: 15px; background: #eee; border-bottom: 1px solid #ddd; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .scroll-content { padding: 15px; flex-grow: 1; overflow-y: auto; }
+        .control-group { margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .control-group h4 { margin: 0 0 10px 0; font-size: 14px; color: #555; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .input-row { display: flex; align-items: center; margin-bottom: 8px; justify-content: space-between; }
+        .input-row label { font-size: 12px; flex: 1; }
+        .input-row input[type="number"] { width: 60px; padding: 4px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; }
+        .input-row input[type="range"] { flex: 1; margin: 0 10px; }
+        .input-row select { width: 100%; padding: 4px; }
+        
+        .btn { width: 100%; padding: 8px; margin-top: 5px; background: var(--accent-color); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; transition: background 0.2s; }
+        .btn:hover { background: #0056b3; }
+        .btn-secondary { background: #6c757d; }
+        .btn-secondary:hover { background: #545b62; }
+        .btn-danger { background: #dc3545; }
+        
+        /* Stats Box */
+        .stats-box { background: #f8f9fa; padding: 10px; border-radius: 4px; border: 1px solid #ddd; font-size: 11px; margin-bottom: 15px; }
+        .stat-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .stat-val { font-weight: bold; }
+
+        /* Log Panel */
+        .log-header { padding: 5px 10px; background: #333; cursor: pointer; display: flex; justify-content: space-between; }
+        .log-content { height: 30px; overflow-y: auto; padding: 5px 10px; white-space: pre-wrap; }
+        .log-expanded .log-content { height: 150px; }
+
+        /* Layer List */
+        .layer-item { display: flex; align-items: center; padding: 5px; background: #fff; border: 1px solid #eee; margin-bottom: 2px; font-size: 12px; cursor: pointer; }
+        .layer-item.selected { background: #e3f2fd; border-color: #2196f3; }
+        .layer-controls { margin-left: auto; display: flex; gap: 5px; }
+
+        /* Tooltip */
+        .tooltip { position: relative; display: inline-block; cursor: help; border-bottom: 1px dotted black; }
+        
+        /* Canvas Overlay */
+        #overlay-controls { position: absolute; top: 10px; right: 10px; display: flex; gap: 10px; }
+        .overlay-btn { background: rgba(255,255,255,0.8); border: 1px solid #ccc; padding: 5px 10px; cursor: pointer; font-size: 12px; border-radius: 4px; }
+
+        /* Collapsible */
+        .collapsible { cursor: pointer; padding: 10px; width: 100%; border: none; text-align: left; outline: none; font-size: 13px; background-color: #eee; }
+        .active, .collapsible:hover { background-color: #ccc; }
+        .content { padding: 0 10px; max-height: 0; overflow: hidden; transition: max-height 0.2s ease-out; background-color: #f9f9f9; }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <div id="sidebar">
+        <div class="panel-header">
+            <span>Dust Container Spec V1</span>
+            <span style="font-size: 10px; color: #666;">v1.0.0</span>
+        </div>
+        
+        <div class="scroll-content">
+            
+            <!-- Stats -->
+            <div class="stats-box" id="stats-display">
+                <div class="stat-row"><span>Vol (Internal):</span><span class="stat-val" id="val-vol-int">0.000 m³</span></div>
+                <div class="stat-row"><span>Vol (Fill):</span><span class="stat-val" id="val-vol-fill">0.000 m³</span></div>
+                <hr style="border-top: 1px solid #ddd; margin: 4px 0;">
+                <div class="stat-row"><span>Mass (Shell):</span><span class="stat-val" id="val-mass-shell">0.0 kg</span></div>
+                <div class="stat-row"><span>Mass (Dust):</span><span class="stat-val" id="val-mass-dust">0.0 kg</span></div>
+                <div class="stat-row"><span>Mass (Total):</span><span class="stat-val" id="val-mass-total">0.0 kg</span></div>
+                <hr style="border-top: 1px solid #ddd; margin: 4px 0;">
+                <div class="stat-row"><span>CoG (Empty):</span><span class="stat-val" id="val-cog-empty">-</span></div>
+                <div class="stat-row"><span>CoG (Filled):</span><span class="stat-val" id="val-cog-filled">-</span></div>
+            </div>
+
+            <!-- Geometry Controls -->
+            <div class="control-group">
+                <h4>Dimensions (mm)</h4>
+                <div class="input-row">
+                    <label>Length (Rect)</label>
+                    <input type="range" id="inp-L" min="800" max="3000" step="10">
+                    <input type="number" id="num-L">
+                </div>
+                <div class="input-row">
+                    <label>Width</label>
+                    <input type="range" id="inp-W" min="800" max="2500" step="10">
+                    <input type="number" id="num-W">
+                </div>
+                <div class="input-row">
+                    <label>Height</label>
+                    <input type="range" id="inp-H" min="500" max="2000" step="10">
+                    <input type="number" id="num-H">
+                </div>
+                <div class="input-row">
+                    <label>Hopper Top (X)</label>
+                    <input type="range" id="inp-XHop" min="0" max="1500" step="10">
+                    <input type="number" id="num-XHop">
+                </div>
+                <div class="input-row">
+                    <label>Wall Thickness</label>
+                    <input type="range" id="inp-Thick" min="3" max="20" step="1">
+                    <input type="number" id="num-Thick">
+                </div>
+            </div>
+
+            <!-- Frame Controls -->
+            <button class="collapsible">Forklift Frame</button>
+            <div class="content">
+                <div class="input-row" style="margin-top:10px;">
+                    <label>Include Frame</label>
+                    <input type="checkbox" id="chk-frame" checked>
+                </div>
+                <div class="input-row">
+                    <label>Frame Height</label>
+                    <input type="number" id="num-HFrame" value="100">
+                </div>
+                <div class="input-row">
+                    <label>Pocket W (Locked)</label>
+                    <input type="number" id="num-WPocket" value="230" disabled>
+                    <input type="checkbox" id="unlock-pocket" title="Unlock">
+                </div>
+                <div class="input-row">
+                    <label>Pocket H</label>
+                    <input type="number" id="num-HPocket" value="91" disabled>
+                </div>
+                <div class="input-row">
+                    <label>Spacing</label>
+                    <input type="number" id="num-SPocket" value="142" disabled>
+                </div>
+            </div>
+
+            <!-- Lid Controls -->
+            <button class="collapsible">Lid Configuration</button>
+            <div class="content">
+                <div class="input-row" style="margin-top:10px;">
+                    <label>Include Lid</label>
+                    <input type="checkbox" id="chk-lid">
+                </div>
+                <div class="input-row">
+                    <label>Thickness</label>
+                    <input type="number" id="num-TLid" value="3">
+                </div>
+                <div class="input-row">
+                    <label>Hole Radius</label>
+                    <input type="number" id="num-RHole" value="150">
+                </div>
+                <div class="input-row">
+                    <label>Offset (Hopper)</label>
+                    <input type="number" id="num-LidOffset" value="300">
+                </div>
+                <div class="input-row">
+                    <label>Advanced Mat.</label>
+                    <input type="checkbox" id="chk-lid-adv">
+                </div>
+                <div class="input-row" id="row-lid-dens" style="display:none;">
+                    <label>Lid Density</label>
+                    <input type="number" id="num-RhoLid" value="7850">
+                </div>
+            </div>
+
+            <!-- Material & Dust -->
+            <div class="control-group" style="margin-top: 15px;">
+                <h4>Material & Fill</h4>
+                <div class="input-row">
+                    <label>Shell Material</label>
+                    <select id="sel-mat">
+                        <option value="7850">Steel (7850 kg/m³)</option>
+                        <option value="2700">Aluminum (2700 kg/m³)</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                </div>
+                <div class="input-row">
+                    <label>Dust Density</label>
+                    <input type="number" id="num-RhoDust" value="1850">
+                </div>
+                <div class="input-row">
+                    <label title="Humidity in Sweden affects weight">Humidity Info</label>
+                    <span style="font-size:10px; color:#666;">(Info only)</span>
+                </div>
+                <div class="input-row">
+                    <label>Fill %</label>
+                    <input type="range" id="inp-Fill" min="0" max="100" value="80">
+                    <span id="lbl-Fill">80%</span>
+                </div>
+            </div>
+
+            <!-- Layers & Import -->
+            <div class="control-group">
+                <h4>Objects & Layers</h4>
+                <div id="layer-list">
+                    <!-- Generated via JS -->
+                </div>
+                <input type="file" id="file-input" accept=".stl" style="display: none;">
+                <button class="btn" onclick="document.getElementById('file-input').click()">Import STL</button>
+            </div>
+
+            <!-- Settings -->
+            <button class="collapsible">Settings & View</button>
+            <div class="content">
+                <div class="input-row" style="margin-top:10px;">
+                    <label>Move Step (mm)</label>
+                    <input type="number" id="num-Step" value="50">
+                </div>
+                <div class="input-row">
+                    <label>Snap to Grid</label>
+                    <input type="checkbox" id="chk-snap" checked>
+                </div>
+                <div class="input-row">
+                    <label>Ref Cube (1m)</label>
+                    <input type="checkbox" id="chk-ref">
+                </div>
+                <div class="input-row">
+                    <label>Show CoG (Empty)</label>
+                    <input type="checkbox" id="chk-cog-e">
+                </div>
+                <div class="input-row">
+                    <label>Show CoG (Filled)</label>
+                    <input type="checkbox" id="chk-cog-f" checked>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="control-group" style="margin-top: 15px;">
+                <button class="btn" id="btn-export-stl">Export Container STL</button>
+                <button class="btn btn-secondary" id="btn-export-lid" style="margin-top:5px;">Export Lid STL</button>
+                <button class="btn btn-secondary" id="btn-copy-source" style="margin-top:5px;">Copy Full Source</button>
+                <button class="btn btn-danger" id="btn-reset" style="margin-top:5px;">Reset Defaults</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Main View -->
+    <div id="main-view">
+        <div id="overlay-controls">
+            <button class="overlay-btn" id="btn-reset-view">Reset View (Iso)</button>
+        </div>
+    </div>
+
+    <!-- Log Panel -->
+    <div id="log-panel">
+        <div class="log-header" onclick="toggleLog()">
+            <span>System Log</span>
+            <span id="log-toggle-icon">▲</span>
+        </div>
+        <div class="log-content" id="log-content">System initialized. Ready.</div>
+    </div>
+
+    <!-- Application Logic -->
+    <script>
+        // --- CONSTANTS & CONFIG ---
+        const APP_VERSION = "1.0.0";
+        const GRAVITY = 9.82;
+        
+        // Default Parameters (Q16, Q26, Q27)
+        const DEFAULTS = {
+            L: 1400, W: 1300, H: 900, x_hopper: 700,
+            t_wall: 5,
+            frame_h: 100, frame_pocket_w: 230, frame_pocket_h: 91, frame_pocket_s: 142,
+            include_frame: true,
+            include_lid: false, t_lid: 3, r_hole: 150, lid_offset: 300,
+            rho_shell: 7850, rho_dust: 1850, fill_percent: 80,
+            move_step: 50, snap: true
+        };
+
+        // State
+        let params = { ...DEFAULTS };
+        let scene, camera, renderer, controls, gridHelper;
+        let containerGroup, lidMesh, dustMesh, frameGroup;
+        let importedObjects = [];
+        let selectedObject = null;
+        let refCube;
+        let cogArrowEmpty, cogArrowFilled;
+        
+        // --- INITIALIZATION ---
+        window.onload = function() {
+            loadState();
+            initThreeJS();
+            setupUI();
+            rebuildContainer();
+            animate();
+            log("Application started. Version " + APP_VERSION);
+        };
+
+        function initThreeJS() {
+            const container = document.getElementById('main-view');
+            
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xe0e0e0); // Concrete gray-ish
+
+            // Camera (Orthographic for Isometric/Habbo feel)
+            const aspect = container.clientWidth / container.clientHeight;
+            const d = 2000; // View size
+            camera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, 1, 10000);
+            
+            // Isometric position
+            resetCameraView();
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.shadowMap.enabled = true;
+            container.appendChild(renderer.domElement);
+
+            // Controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.maxPolarAngle = Math.PI; // Allow going below floor (Q33)
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.7);
+            dirLight.position.set(1000, 2000, 1000);
+            dirLight.castShadow = true;
+            scene.add(dirLight);
+
+            // Ground Grid (Habbo style)
+            gridHelper = new THREE.GridHelper(10000, 100, 0x888888, 0xbbbbbb);
+            scene.add(gridHelper);
+            
+            // Reference Cube (1m)
+            const geomRef = new THREE.BoxGeometry(1000, 1000, 1000);
+            const matRef = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true, transparent: true, opacity: 0.3 });
+            refCube = new THREE.Mesh(geomRef, matRef);
+            refCube.position.set(1500, 500, 1500);
+            refCube.visible = false;
+            scene.add(refCube);
+
+            // CoG Arrows
+            cogArrowEmpty = new THREE.ArrowHelper(new THREE.Vector3(0,-1,0), new THREE.Vector3(0,0,0), 500, 0x0000ff);
+            cogArrowFilled = new THREE.ArrowHelper(new THREE.Vector3(0,-1,0), new THREE.Vector3(0,0,0), 500, 0xff0000);
+            scene.add(cogArrowEmpty);
+            scene.add(cogArrowFilled);
+
+            // Event Listeners
+            window.addEventListener('resize', onWindowResize);
+            document.addEventListener('keydown', onKeyDown);
+            renderer.domElement.addEventListener('mousedown', onCanvasClick);
+        }
+
+        function resetCameraView() {
+            camera.position.set(2000, 2000, 2000);
+            camera.lookAt(0, 0, 0);
+            camera.zoom = 1;
+            camera.updateProjectionMatrix();
+        }
+
+        // --- GEOMETRY GENERATION ---
+
+        function rebuildContainer() {
+            // Cleanup old
+            if (containerGroup) scene.remove(containerGroup);
+            if (frameGroup) scene.remove(frameGroup);
+            if (lidMesh) scene.remove(lidMesh);
+            
+            containerGroup = new THREE.Group();
+            containerGroup.name = "Container";
+            
+            // Materials
+            const matShell = new THREE.MeshStandardMaterial({ color: 0x4682B4, roughness: 0.6, side: THREE.DoubleSide }); // Steel Blue
+            const matFrame = new THREE.MeshStandardMaterial({ color: 0x228B22, roughness: 0.7 }); // Forest Green
+            const matLid = new THREE.MeshStandardMaterial({ color: 0x708090, roughness: 0.5 }); // Slate Gray
+            const matDust = new THREE.MeshBasicMaterial({ color: 0x8B4513, transparent: true, opacity: 0.6 }); // Dirt
+
+            // 1. Main Shell (Procedural Mesh)
+            // We build walls to ensure it's hollow.
+            // Origin at bottom center of the rectangular part.
+            
+            const L = params.L;
+            const W = params.W;
+            const H = params.H;
+            const t = params.t_wall;
+            const xHop = params.x_hopper;
+
+            // Floor
+            const floorGeo = new THREE.BoxGeometry(L, t, W);
+            const floor = new THREE.Mesh(floorGeo, matShell);
+            floor.position.set(0, t/2, 0);
+            containerGroup.add(floor);
+
+            // Rectangular Walls (Front/Back/Left/Right)
+            // Left/Right are full length L
+            const sideH = H - t; // Height above floor
+            
+            // Side Walls (Left/Right)
+            // Shape: Rectangle + Triangle on top if xHop > 0
+            const sideShape = new THREE.Shape();
+            sideShape.moveTo(-L/2, 0);
+            sideShape.lineTo(L/2, 0);
+            sideShape.lineTo(L/2, sideH); // Top right of rect
+            
+            if (xHop > 1) {
+                // Hopper part
+                // Triangle base starts at top right, goes left by xHop
+                sideShape.lineTo(L/2 - xHop, sideH); // Top of hopper (flat?) No, prompt says "base of triangle going at the top".
+                // Wait, "triangular prism with the base of the triangle going at the top".
+                // This implies the top is flat for xHop distance? Or the triangle sticks UP?
+                // "rectangular shape... then part with triangular prism with base... at top".
+                // Usually dust containers have a slanted front.
+                // Let's assume: Rectangular back part, Slanted front part.
+                // Actually, prompt Q3: "stay level with rectangular bottom".
+                // Let's interpret: The container has a rectangular footprint. The profile is a rectangle + a triangle on top? 
+                // Or is it a skip? "Rectangular block... then triangular prism".
+                // Let's assume standard skip: Rectangular bottom, vertical back, vertical sides, slanted front?
+                // Re-reading Q5: "oriented same way as triangle and rectangle stitched together".
+                // Let's go with: A box L x W x H_rect, plus a wedge on top?
+                // "Length on top... away from rectangular piece".
+                // Interpretation: It's a composite shape.
+                // Let's model: A rectangular box (L x W x H) is the bounding box.
+                // The shape is defined by side profile.
+                // Let's assume the "Rectangular Piece" is the back, and "Triangular Piece" is the front wedge.
+                // Actually, let's stick to the simplest interpretation of the prompt's "Rectangular block... stitched... triangular prism".
+                // Profile:
+                // (0,0) -> (L,0) -> (L, H) -> (L-xHop, H) -> (0, H_rect?) -> close.
+                // Let's assume the top is flat for length xHop?
+                // Let's assume the "Rectangular part" has length (L - xHop_base_projection).
+                // Let's try this profile:
+                // Bottom: 0 to L.
+                // Back: Height H.
+                // Top: Length xHop (starting from back).
+                // Front: Slants down from top end to bottom front.
+                
+                // Correct Interpretation based on "base of triangle going at the top":
+                // It looks like a rectangular box with a wedge added on top or side.
+                // Given "construction container", it's likely a "Skip".
+                // Let's model a standard open skip.
+                // Floor: L x W.
+                // Walls: Vertical Back, Vertical Sides (with slant), Slanted Front.
+                // Profile:
+                // (Back Bottom) -> (Front Bottom) -> (Front Top) -> (Back Top).
+                // If xHop is "length on top away from rectangular piece", maybe the top opening is longer than bottom?
+                // Let's stick to: Bottom Length L. Top Length = L + something?
+                // Prompt: "variable sliders should also reflect the length on top... away from rectangular piece".
+                // This implies Top Length > Rectangular Piece Length.
+                // Let's assume:
+                // Rectangular Block: L_rect x W x H.
+                // Triangular Prism: Attached to side?
+                // Let's simplify: The container has a total bounding box.
+                // Let's assume the profile is a polygon.
+                // Let's use ExtrudeGeometry for the side walls to be safe.
+                
+                // Revised Geometry based on "Rectangular block... stitched... triangular prism":
+                // Block: L_rect x W x H.
+                // Prism: Base at top.
+                // Let's assume the user inputs L (total) and xHop (wedge part).
+                // Actually, let's use the inputs: L (Rect Length), xHop (Wedge Top Length).
+                // Total Length = L.
+                // Wait, prompt says "Length on top... away from rectangular piece".
+                // Let's assume L is the rectangular part length. xHop is the wedge length.
+                // Total Length = L + xHop?
+                // Let's assume L is total length for now to keep bounding box sane, or L_rect + xHop.
+                // Let's use L_rect (from slider) and xHop.
+                // Total Length = L + xHop (if xHop is the extension).
+                // But Q16 says "L_rect = 1400, x_hopper = 700".
+                // So we have a rect part and a hopper part.
+                
+                // Construction:
+                // Part A (Rect): Box of size L x W x H.
+                // Part B (Hopper): Triangular prism attached to Part A.
+                // Orientation: Hopper is "stitched".
+                // Let's place Rect at origin. Hopper extends in +X.
+                
+                // Side Wall Profile (Extruded W):
+                // 0,0 -> L,0 -> L,H -> 0,H -> 0,0 (Rect)
+                // PLUS Triangle:
+                // Starts at L,0? No, "base of triangle going at the top".
+                // Triangle points: (L, H) -> (L+xHop, H) -> (L, 0)?
+                // This makes a wedge sticking out.
+                
+                const shape = new THREE.Shape();
+                shape.moveTo(-L/2, 0);
+                shape.lineTo(L/2, 0); // Bottom of Rect
+                shape.lineTo(L/2, H); // Top Right of Rect
+                
+                if (xHop > 1) {
+                    // Wedge extends to right
+                    shape.lineTo(L/2 + xHop, H); // Top of wedge
+                    shape.lineTo(L/2, 0); // Back to bottom right of rect
+                } else {
+                    shape.lineTo(-L/2, H); // Top Left
+                }
+                shape.lineTo(-L/2, H);
+                shape.lineTo(-L/2, 0);
+                
+                // We need to extrude this shape to make the shell.
+                // But we need it hollow.
+                // Strategy: Extrude the "Outer" shape, then subtract "Inner"? No CSG.
+                // Strategy: Build panels.
+                
+                // Let's go with Panel Construction for "Rugged" look.
+                // 1. Floor: L (rect) x W. (Wedge has no floor? Or "stay level with rectangular bottom" Q3).
+                // Q3 says "stay level". So Wedge has floor too?
+                // If Wedge has floor, it's not a triangle, it's a trapezoid?
+                // "Triangular prism with base... at top".
+                // A triangle with base at top and point at bottom?
+                // If point is at bottom, and it stays level with rect bottom, then the point touches the ground?
+                // Let's assume:
+                // Rect Part: Box.
+                // Wedge Part: Inverted Right Triangle attached to side.
+                // Top edge length xHop. Vertical side H. Hypotenuse connects Top-Far to Bottom-Near.
+                
+                // Let's build the "Shell" Group.
+                
+                // Floor (Rect part only? Or total?)
+                // If triangle point is at bottom, floor is just the line?
+                // Let's assume the wedge is an overhang? No, "container".
+                // Let's assume the standard "Skip" shape:
+                // Floor length = L.
+                // Top length = L + xHop.
+                // Front wall slants out.
+                
+                // Let's use the parameters strictly:
+                // Rectangular Block: L x W x H.
+                // Triangular Prism: Base at top.
+                // Stitched.
+                
+                // Let's render:
+                // 1. Rectangular Box (Open Top).
+                // 2. Wedge attached to Front.
+                
+                // Left/Right Walls:
+                const wallGeo = new THREE.ExtrudeGeometry(shape, { depth: t, bevelEnabled: false });
+                const wallLeft = new THREE.Mesh(wallGeo, matShell);
+                wallLeft.position.set(0, 0, W/2 - t);
+                
+                const wallRight = new THREE.Mesh(wallGeo, matShell);
+                wallRight.position.set(0, 0, -W/2);
+                
+                containerGroup.add(wallLeft);
+                containerGroup.add(wallRight);
+                
+                // Front Wall (The slanted one or vertical?)
+                // If shape goes (L/2, 0) to (L/2+xHop, H), we need a wall there.
+                // Length of slant = sqrt(xHop^2 + H^2).
+                // Angle = atan2(H, xHop).
+                const slantLen = Math.sqrt(xHop*xHop + H*H);
+                const angle = Math.atan2(H, xHop);
+                
+                const frontWallGeo = new THREE.BoxGeometry(slantLen, W - 2*t, t);
+                const frontWall = new THREE.Mesh(frontWallGeo, matShell);
+                // Position is tricky. Midpoint of the slant line.
+                // Line from (L/2, 0) to (L/2+xHop, H).
+                // Midpoint: (L/2 + xHop/2, H/2).
+                frontWall.position.set(L/2 + xHop/2, H/2, 0);
+                frontWall.rotation.z = angle; 
+                containerGroup.add(frontWall);
+                
+                // Back Wall (Vertical at -L/2)
+                const backWallGeo = new THREE.BoxGeometry(t, H, W - 2*t);
+                const backWall = new THREE.Mesh(backWallGeo, matShell);
+                backWall.position.set(-L/2 + t/2, H/2, 0);
+                containerGroup.add(backWall);
+                
+                // Floor (Rect part only, since wedge goes to a point at bottom)
+                // Wait, if wedge goes to point (L/2, 0), the floor ends there.
+                const floorGeo2 = new THREE.BoxGeometry(L - 2*t, t, W - 2*t); // Inside dims
+                const floor2 = new THREE.Mesh(floorGeo2, matShell);
+                floor2.position.set(0, t/2, 0);
+                containerGroup.add(floor2);
+
+                // 2. Forklift Frame (Green)
+                if (params.include_frame) {
+                    frameGroup = new THREE.Group();
+                    const hf = params.frame_h;
+                    const wp = params.frame_pocket_w;
+                    const hp = params.frame_pocket_h;
+                    const sp = params.frame_pocket_s;
+                    
+                    // Frame is L_rect long (or total?). Spec: "bottom part... welded to rest".
+                    // "Rest of width used for frame support".
+                    // "Rest of length of rectangular part is hollowed out".
+                    // Let's make the frame run the full length of the Rectangular part (L).
+                    
+                    // We need 3 longitudinal beams to form the pockets.
+                    // Total W.
+                    // Center Web: width sp.
+                    // Left/Right Webs: (W - sp - 2*wp) / 2.
+                    
+                    const sideWebW = (W - sp - 2*wp) / 2;
+                    
+                    // Geometries
+                    const beamGeoSide = new THREE.BoxGeometry(L, hf, sideWebW);
+                    const beamGeoCenter = new THREE.BoxGeometry(L, hf, sp);
+                    const plateGeo = new THREE.BoxGeometry(L, (hf - hp)/2, W); // Top/Bottom plates if needed?
+                    // Spec says "pockets... width 230 height 91".
+                    // If Frame Height > 91, we have material above/below.
+                    
+                    const yFrame = -hf/2; // Below container
+                    
+                    // Left Beam
+                    const leftBeam = new THREE.Mesh(beamGeoSide, matFrame);
+                    leftBeam.position.set(0, yFrame, W/2 - sideWebW/2);
+                    frameGroup.add(leftBeam);
+                    
+                    // Right Beam
+                    const rightBeam = new THREE.Mesh(beamGeoSide, matFrame);
+                    rightBeam.position.set(0, yFrame, -W/2 + sideWebW/2);
+                    frameGroup.add(rightBeam);
+                    
+                    // Center Beam
+                    const centerBeam = new THREE.Mesh(beamGeoCenter, matFrame);
+                    centerBeam.position.set(0, yFrame, 0);
+                    frameGroup.add(centerBeam);
+                    
+                    // Top/Bottom plates to close the pockets?
+                    // Let's add thin plates (5mm) top and bottom of frame to make it rugged.
+                    const plateT = 5;
+                    const topPlate = new THREE.Mesh(new THREE.BoxGeometry(L, plateT, W), matFrame);
+                    topPlate.position.set(0, -plateT/2, 0); // Top of frame (touching container)
+                    frameGroup.add(topPlate);
+                    
+                    const botPlate = new THREE.Mesh(new THREE.BoxGeometry(L, plateT, W), matFrame);
+                    botPlate.position.set(0, -hf + plateT/2, 0);
+                    frameGroup.add(botPlate);
+
+                    containerGroup.add(frameGroup);
+                }
+
+                // 3. Lid
+                if (params.include_lid) {
+                    // Lid covers the top opening.
+                    // Opening is from -L/2 to L/2 + xHop. Width W.
+                    // Lid is a plate with a hole.
+                    // Use Shape with hole.
+                    const lidLen = L + xHop;
+                    const lidShape = new THREE.Shape();
+                    lidShape.moveTo(-L/2, -W/2);
+                    lidShape.lineTo(L/2 + xHop, -W/2);
+                    lidShape.lineTo(L/2 + xHop, W/2);
+                    lidShape.lineTo(-L/2, W/2);
+                    lidShape.lineTo(-L/2, -W/2);
+                    
+                    // Hole
+                    const holePath = new THREE.Path();
+                    // "specific distance away from the edge where we have the triangle".
+                    // Edge is at X = L/2 + xHop.
+                    // Center X = (L/2 + xHop) - params.lid_offset.
+                    const cx = (L/2 + xHop) - params.lid_offset;
+                    const cy = 0;
+                    holePath.absarc(cx, cy, params.r_hole, 0, Math.PI * 2, true);
+                    lidShape.holes.push(holePath);
+                    
+                    const lidGeo = new THREE.ExtrudeGeometry(lidShape, { depth: params.t_lid, bevelEnabled: false });
+                    lidMesh = new THREE.Mesh(lidGeo, matLid);
+                    lidMesh.rotation.x = Math.PI / 2;
+                    lidMesh.position.set(0, H + params.t_lid, 0); // On top
+                    containerGroup.add(lidMesh);
+                }
+
+                // 4. Dust Volume (Visual)
+                // Simple box representing fill level in the rect part + wedge?
+                // For V1, let's just fill the rectangular part up to % height.
+                const fillH = H * (params.fill_percent / 100);
+                if (fillH > 0) {
+                    // Complex shape again.
+                    // Let's just clone the side shape, scale Y, and extrude.
+                    // Simplified: Box in rect part.
+                    const dustGeo = new THREE.BoxGeometry(L - 2*t, fillH, W - 2*t);
+                    dustMesh = new THREE.Mesh(dustGeo, matDust);
+                    dustMesh.position.set(0, fillH/2 + t, 0);
+                    containerGroup.add(dustMesh);
+                }
+            }
+
+            scene.add(containerGroup);
+            selectedObject = containerGroup; // Default selection
+            
+            // Update Physics
+            calculatePhysics();
+        }
+
+        // --- PHYSICS & MATH ---
+
+        function calculatePhysics() {
+            // Units: mm to meters
+            const L_m = params.L / 1000;
+            const W_m = params.W / 1000;
+            const H_m = params.H / 1000;
+            const xHop_m = params.x_hopper / 1000;
+            const t_m = params.t_wall / 1000;
+            
+            // Internal Volume
+            // Rect Part: (L - 2t) * (W - 2t) * (H - t)
+            const V_rect_int = (L_m - 2*t_m) * (W_m - 2*t_m) * (H_m - t_m);
+            
+            // Wedge Part: Triangle Area * Width
+            // Triangle Base (top) = xHop_m. Height = H_m.
+            // Inner Triangle: approx same height, base reduced?
+            // Let's approximate: V_wedge = 0.5 * xHop_m * H_m * (W_m - 2*t_m).
+            const V_wedge_int = 0.5 * xHop_m * H_m * (W_m - 2*t_m);
+            
+            const V_total = Math.max(0, V_rect_int + V_wedge_int);
+            const V_fill = V_total * (params.fill_percent / 100);
+            
+            // Mass
+            // Shell Volume approx = Surface Area * t
+            // Rect Surface: 2(LH + LW + WH).
+            // Let's use bounding box diff for rough estimate or sum parts.
+            // V_shell = V_outer - V_inner (roughly).
+            const V_rect_out = L_m * W_m * H_m;
+            const V_wedge_out = 0.5 * xHop_m * H_m * W_m;
+            const V_shell_vol = (V_rect_out + V_wedge_out) - V_total;
+            
+            // Frame Volume
+            let V_frame = 0;
+            if (params.include_frame) {
+                const hf_m = params.frame_h / 1000;
+                // Solid block L*W*H minus pockets?
+                // We built it from beams.
+                // 2 Side Beams + 1 Center Beam.
+                const wp_m = params.frame_pocket_w / 1000;
+                const sp_m = params.frame_pocket_s / 1000;
+                const sideW_m = (W_m - sp_m - 2*wp_m)/2;
+                V_frame = (L_m * hf_m * sideW_m * 2) + (L_m * hf_m * sp_m);
+                // Add plates
+                V_frame += 2 * (L_m * W_m * 0.005); 
+            }
+
+            const m_shell = (V_shell_vol + V_frame) * params.rho_shell;
+            const m_dust = V_fill * params.rho_dust;
+            
+            // Lid Mass
+            let m_lid = 0;
+            if (params.include_lid) {
+                const r_m = params.r_hole / 1000;
+                const t_lid_m = params.t_lid / 1000;
+                const area_lid = (L_m + xHop_m) * W_m - (Math.PI * r_m * r_m);
+                // Use lid density if advanced, else shell
+                const rho = document.getElementById('chk-lid-adv').checked ? 
+                            parseFloat(document.getElementById('num-RhoLid').value) : params.rho_shell;
+                m_lid = area_lid * t_lid_m * rho;
+            }
+
+            const m_total = m_shell + m_lid + m_dust;
+
+            // CoG (Simplified Centroids)
+            // Rect Center: (0, H/2, 0)
+            // Wedge Center: (L/2 + xHop/3, 2H/3, 0) -> Approx for inverted right triangle
+            // Frame Center: (0, -H_frame/2, 0)
+            
+            // Weighted Average Z (Vertical) and X (Longitudinal)
+            // Let's just do X and Y (Height).
+            // X_rect = 0. M_rect ~ V_rect_out.
+            // X_wedge = L/2 + xHop_m/3. M_wedge ~ V_wedge_out.
+            // X_frame = 0.
+            
+            const M1 = V_rect_out * params.rho_shell;
+            const X1 = 0; const Y1 = H_m/2;
+            
+            const M2 = V_wedge_out * params.rho_shell;
+            const X2 = L_m/2 + xHop_m/3; const Y2 = H_m * 0.66; // Top heavy wedge
+            
+            const M3 = V_frame * params.rho_shell;
+            const X3 = 0; const Y3 = -params.frame_h/1000/2;
+            
+            const M_lid = m_lid;
+            const X_lid = (xHop_m - L_m)/2 + L_m/2; // Approx center of lid
+            const Y_lid = H_m;
+
+            const M_d = m_dust;
+            const X_d = 0; const Y_d = (H_m * (params.fill_percent/100))/2; // Dust centered in rect
+
+            // Empty CoG
+            const sumM_e = M1 + M2 + M3 + M_lid;
+            const cogX_e = (M1*X1 + M2*X2 + M3*X3 + M_lid*X_lid) / sumM_e;
+            const cogY_e = (M1*Y1 + M2*Y2 + M3*Y3 + M_lid*Y_lid) / sumM_e;
+            
+            // Filled CoG
+            const sumM_f = sumM_e + M_d;
+            const cogX_f = (sumM_e*cogX_e + M_d*X_d) / sumM_f;
+            const cogY_f = (sumM_e*cogY_e + M_d*Y_d) / sumM_f;
+
+            // Update UI
+            document.getElementById('val-vol-int').innerText = V_total.toFixed(3) + " m³";
+            document.getElementById('val-vol-fill').innerText = V_fill.toFixed(3) + " m³";
+            document.getElementById('val-mass-shell').innerText = (m_shell + m_lid).toFixed(1) + " kg";
+            document.getElementById('val-mass-dust').innerText = m_dust.toFixed(1) + " kg";
+            document.getElementById('val-mass-total').innerText = m_total.toFixed(1) + " kg";
+            
+            const cogEStr = `X:${cogX_e.toFixed(2)}, Y:${cogY_e.toFixed(2)}`;
+            const cogFStr = `X:${cogX_f.toFixed(2)}, Y:${cogY_f.toFixed(2)}`;
+            document.getElementById('val-cog-empty').innerText = cogEStr;
+            document.getElementById('val-cog-filled').innerText = cogFStr;
+
+            // Update Arrows
+            if (containerGroup) {
+                // Convert meters back to mm for display
+                cogArrowEmpty.position.set(cogX_e * 1000, cogY_e * 1000, 0);
+                cogArrowFilled.position.set(cogX_f * 1000, cogY_f * 1000, 0);
+            }
+        }
+
+        // --- UI & INTERACTION ---
+
+        function setupUI() {
+            // Helper to bind input/slider pairs
+            function bind(idRange, idNum, paramKey, callback) {
+                const r = document.getElementById(idRange);
+                const n = document.getElementById(idNum);
+                if(r) {
+                    r.value = params[paramKey];
+                    r.oninput = () => { n.value = r.value; params[paramKey] = parseFloat(r.value); callback(); };
+                }
+                if(n) {
+                    n.value = params[paramKey];
+                    n.onchange = () => { 
+                        if(r) r.value = n.value; 
+                        params[paramKey] = parseFloat(n.value); 
+                        callback(); 
+                    };
+                }
+            }
+
+            bind('inp-L', 'num-L', 'L', rebuildContainer);
+            bind('inp-W', 'num-W', 'W', rebuildContainer);
+            bind('inp-H', 'num-H', 'H', rebuildContainer);
+            bind('inp-XHop', 'num-XHop', 'x_hopper', rebuildContainer);
+            bind('inp-Thick', 'num-Thick', 't_wall', rebuildContainer);
+            
+            // Frame
+            document.getElementById('chk-frame').onchange = (e) => { params.include_frame = e.target.checked; rebuildContainer(); };
+            document.getElementById('num-HFrame').onchange = (e) => { params.frame_h = parseFloat(e.target.value); rebuildContainer(); };
+            
+            // Unlock Pockets
+            document.getElementById('unlock-pocket').onchange = (e) => {
+                const disabled = !e.target.checked;
+                document.getElementById('num-WPocket').disabled = disabled;
+                document.getElementById('num-HPocket').disabled = disabled;
+                document.getElementById('num-SPocket').disabled = disabled;
+            };
+            
+            // Lid
+            document.getElementById('chk-lid').onchange = (e) => { params.include_lid = e.target.checked; rebuildContainer(); };
+            document.getElementById('num-TLid').onchange = (e) => { params.t_lid = parseFloat(e.target.value); rebuildContainer(); };
+            document.getElementById('num-RHole').onchange = (e) => { params.r_hole = parseFloat(e.target.value); rebuildContainer(); };
+            document.getElementById('num-LidOffset').onchange = (e) => { params.lid_offset = parseFloat(e.target.value); rebuildContainer(); };
+            document.getElementById('chk-lid-adv').onchange = (e) => { 
+                document.getElementById('row-lid-dens').style.display = e.target.checked ? 'flex' : 'none';
+                calculatePhysics();
+            };
+
+            // Materials
+            document.getElementById('sel-mat').onchange = (e) => {
+                if(e.target.value !== 'custom') params.rho_shell = parseFloat(e.target.value);
+                calculatePhysics();
+            };
+            document.getElementById('num-RhoDust').onchange = (e) => { params.rho_dust = parseFloat(e.target.value); calculatePhysics(); };
+            document.getElementById('inp-Fill').oninput = (e) => { 
+                params.fill_percent = parseFloat(e.target.value); 
+                document.getElementById('lbl-Fill').innerText = params.fill_percent + "%";
+                rebuildContainer(); 
+            };
+
+            // Settings
+            document.getElementById('num-Step').onchange = (e) => { params.move_step = parseFloat(e.target.value); };
+            document.getElementById('chk-snap').onchange = (e) => { params.snap = e.target.checked; };
+            document.getElementById('chk-ref').onchange = (e) => { refCube.visible = e.target.checked; };
+            document.getElementById('chk-cog-e').onchange = (e) => { cogArrowEmpty.visible = e.target.checked; };
+            document.getElementById('chk-cog-f').onchange = (e) => { cogArrowFilled.visible = e.target.checked; };
+
+            // Buttons
+            document.getElementById('btn-reset-view').onclick = resetCameraView;
+            document.getElementById('btn-export-stl').onclick = exportContainerSTL;
+            document.getElementById('btn-export-lid').onclick = exportLidSTL;
+            document.getElementById('btn-copy-source').onclick = copySource;
+            document.getElementById('btn-reset').onclick = () => { localStorage.clear(); location.reload(); };
+
+            // Collapsibles
+            const coll = document.getElementsByClassName("collapsible");
+            for (let i = 0; i < coll.length; i++) {
+                coll[i].addEventListener("click", function() {
+                    this.classList.toggle("active");
+                    const content = this.nextElementSibling;
+                    if (content.style.maxHeight){
+                        content.style.maxHeight = null;
+                    } else {
+                        content.style.maxHeight = content.scrollHeight + "px";
+                    } 
+                });
+            }
+            
+            // File Import
+            document.getElementById('file-input').addEventListener('change', handleFileSelect, false);
+            
+            updateLayerList();
+        }
+
+        // --- INTERACTION LOGIC ---
+
+        function onKeyDown(event) {
+            if (!selectedObject) return;
+            
+            const step = params.move_step;
+            const snap = params.snap ? 100 : 1; // Grid step 100mm
+            
+            let dx = 0, dz = 0; // Z in ThreeJS is Y in screen for top-down, but here Y is Up. X/Z is ground.
+            
+            switch(event.key.toLowerCase()) {
+                case 'w': dz = -step; break;
+                case 's': dz = step; break;
+                case 'a': dx = -step; break;
+                case 'd': dx = step; break;
+            }
+            
+            if (dx !== 0 || dz !== 0) {
+                selectedObject.position.x += dx;
+                selectedObject.position.z += dz;
+                
+                if (params.snap) {
+                    selectedObject.position.x = Math.round(selectedObject.position.x / snap) * snap;
+                    selectedObject.position.z = Math.round(selectedObject.position.z / snap) * snap;
+                }
+                
+                checkCollisions();
+            }
+        }
+
+        function onCanvasClick(event) {
+            // Simple raycaster for selection
+            const mouse = new THREE.Vector2();
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+            
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(mouse, camera);
+            
+            const intersects = raycaster.intersectObjects(scene.children, true);
+            
+            if (intersects.length > 0) {
+                // Find the root group
+                let obj = intersects[0].object;
+                while(obj.parent && obj.parent !== scene) {
+                    obj = obj.parent;
+                }
+                if (obj !== gridHelper && obj !== refCube && obj !== cogArrowEmpty && obj !== cogArrowFilled) {
+                    selectedObject = obj;
+                    log("Selected: " + obj.name);
+                    updateLayerList();
+                }
+            }
+        }
+
+        function checkCollisions() {
+            if (!containerGroup) return;
+            const box1 = new THREE.Box3().setFromObject(containerGroup);
+            
+            importedObjects.forEach(obj => {
+                const box2 = new THREE.Box3().setFromObject(obj);
+                if (box1.intersectsBox(box2)) {
+                    const intersection = box1.clone().intersect(box2);
+                    const dx = intersection.max.x - intersection.min.x;
+                    const dy = intersection.max.y - intersection.min.y;
+                    const dz = intersection.max.z - intersection.min.z;
+                    const vol = (dx*dy*dz) / 1000000; // Liters
+                    log(`Collision! Overlap Vol: ${vol.toFixed(2)} L`);
+                }
+            });
+        }
+
+        // --- IMPORT / EXPORT ---
+
+        function handleFileSelect(evt) {
+            const file = evt.target.files[0];
+            if (!file) return;
+            
+            if (file.size > 15 * 1024 * 1024) {
+                if(!confirm("File is large (>15MB). Continue?")) return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const loader = new THREE.STLLoader();
+                const geometry = loader.parse(e.target.result);
+                const material = new THREE.MeshStandardMaterial({ color: 0x999999 });
+                const mesh = new THREE.Mesh(geometry, material);
+                
+                mesh.name = file.name;
+                mesh.rotation.x = -Math.PI / 2; // STL usually Z-up
+                mesh.position.set(0, 0, 0);
+                
+                scene.add(mesh);
+                importedObjects.push(mesh);
+                updateLayerList();
+                log("Imported: " + file.name);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function exportContainerSTL() {
+            const exporter = new THREE.STLExporter();
+            // Export only container group (excluding lid if separate button used, but spec says merge option)
+            // We export containerGroup. Note: dustMesh is inside, we should hide it.
+            const dustVis = dustMesh ? dustMesh.visible : false;
+            if(dustMesh) dustMesh.visible = false;
+            if(lidMesh && !params.include_lid) lidMesh.visible = false; // Logic check
+            
+            const result = exporter.parse(containerGroup);
+            saveString(result, 'container_design.stl');
+            
+            if(dustMesh) dustMesh.visible = dustVis;
+            log("Exported Container STL");
+        }
+
+        function exportLidSTL() {
+            if (!lidMesh) { alert("No lid generated"); return; }
+            const exporter = new THREE.STLExporter();
+            const result = exporter.parse(lidMesh);
+            saveString(result, 'lid_design.stl');
+            log("Exported Lid STL");
+        }
+
+        function saveString(text, filename) {
+            const blob = new Blob([text], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+        }
+
+        function copySource() {
+            const html = document.documentElement.outerHTML;
+            // In a real split scenario, we'd fetch files. Here we just copy the whole file.
+            navigator.clipboard.writeText(html).then(() => {
+                alert("Full source code copied to clipboard!");
+            });
+        }
+
+        // --- UTILS ---
+
+        function updateLayerList() {
+            const list = document.getElementById('layer-list');
+            list.innerHTML = '';
+            
+            const items = [containerGroup, ...importedObjects];
+            items.forEach(obj => {
+                if(!obj) return;
+                const div = document.createElement('div');
+                div.className = 'layer-item' + (selectedObject === obj ? ' selected' : '');
+                div.innerHTML = `<span>${obj.name || 'Object'}</span>`;
+                div.onclick = () => { selectedObject = obj; updateLayerList(); };
+                list.appendChild(div);
+            });
+        }
+
+        function log(msg) {
+            const el = document.getElementById('log-content');
+            const time = new Date().toLocaleTimeString();
+            el.innerText = `[${time}] ${msg}\n` + el.innerText;
+        }
+
+        function toggleLog() {
+            document.getElementById('log-panel').classList.toggle('log-expanded');
+        }
+
+        function saveState() {
+            localStorage.setItem('dustContainerConfigV1', JSON.stringify(params));
+        }
+
+        function loadState() {
+            const s = localStorage.getItem('dustContainerConfigV1');
+            if (s) {
+                try {
+                    const p = JSON.parse(s);
+                    params = { ...DEFAULTS, ...p };
+                } catch(e) { console.error("Load failed", e); }
+            }
+        }
+
+        function onWindowResize() {
+            const container = document.getElementById('main-view');
+            const aspect = container.clientWidth / container.clientHeight;
+            const d = 2000;
+            camera.left = -d * aspect;
+            camera.right = d * aspect;
+            camera.top = d;
+            camera.bottom = -d;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        
+        // Auto-save loop
+        setInterval(saveState, 5000);
+
+    </script>
+</body>
+</html>
