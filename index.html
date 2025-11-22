@@ -3,29 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dust Container Engineer - Pro V2</title>
+    <title>Dust Container Engineer - Spec V1</title>
     
     <style>
         :root {
-            --bg-color: #dcdcdc; /* Concrete slab gray */
-            --panel-bg: #ffffff;
-            --text-main: #2c3e50;
-            --text-muted: #7f8c8d;
+            --bg-color: #b0b0b0; /* Concrete slab gray */
+            --panel-bg: #f5f5f5;
+            --text-main: #333;
             --accent: #2980b9; /* Engineering Blue */
             --accent-hover: #3498db;
-            --danger: #e74c3c;
+            --danger: #c0392b;
             --success: #27ae60;
-            --border: #bdc3c7;
-            --log-bg: #2c3e50;
-            --log-text: #2ecc71;
+            --border: #ccc;
+            --log-bg: #222;
+            --log-text: #0f0;
         }
 
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; user-select: none; }
 
         body { 
             margin: 0; 
             overflow: hidden; 
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             background-color: var(--bg-color); 
             color: var(--text-main); 
             display: flex; 
@@ -34,25 +33,25 @@
         
         /* --- SIDEBAR --- */
         #sidebar { 
-            width: 380px; 
+            width: 360px; 
             background: var(--panel-bg); 
             border-right: 1px solid var(--border); 
             display: flex; 
             flex-direction: column; 
             z-index: 100; 
-            box-shadow: 4px 0 10px rgba(0,0,0,0.1); 
+            box-shadow: 2px 0 10px rgba(0,0,0,0.2); 
             flex-shrink: 0;
         }
 
         .panel-header { 
-            padding: 15px; 
-            background: #ecf0f1; 
+            padding: 12px 15px; 
+            background: #e0e0e0; 
             border-bottom: 1px solid var(--border); 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
         }
-        .panel-header h2 { margin: 0; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; }
+        .panel-header h2 { margin: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
         
         .scroll-content { 
             padding: 15px; 
@@ -62,175 +61,177 @@
         }
 
         /* --- CONTROLS --- */
-        .control-group { margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+        .control-group { margin-bottom: 15px; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
         .control-group h4 { 
-            margin: 0 0 12px 0; 
+            margin: 0 0 10px 0; 
             font-size: 12px; 
             color: var(--accent); 
             text-transform: uppercase; 
             font-weight: 700; 
             border-left: 3px solid var(--accent); 
-            padding-left: 8px; 
+            padding-left: 6px; 
         }
         
-        .input-row { display: flex; align-items: center; margin-bottom: 8px; font-size: 13px; }
+        .input-row { display: flex; align-items: center; margin-bottom: 6px; font-size: 12px; }
         .input-row label { flex: 1; font-weight: 500; }
         .input-row input[type="number"] { 
-            width: 70px; 
-            padding: 4px; 
+            width: 65px; 
+            padding: 3px; 
             border: 1px solid var(--border); 
-            border-radius: 4px; 
+            border-radius: 3px; 
             text-align: right;
         }
-        .input-row input[type="range"] { flex: 1; margin: 0 10px; cursor: pointer; }
-        .input-row select { width: 100%; padding: 5px; border-radius: 4px; border: 1px solid var(--border); }
-        .input-row input[type="checkbox"] { cursor: pointer; transform: scale(1.2); }
+        .input-row input[type="range"] { flex: 1; margin: 0 8px; cursor: pointer; }
+        .input-row select { width: 100%; padding: 4px; border-radius: 3px; border: 1px solid var(--border); }
+        .input-row input[type="checkbox"] { cursor: pointer; }
 
         /* --- BUTTONS --- */
         .btn { 
             width: 100%; 
-            padding: 10px; 
-            margin-top: 5px; 
+            padding: 8px; 
+            margin-top: 4px; 
             background: var(--accent); 
             color: white; 
             border: none; 
-            border-radius: 4px; 
+            border-radius: 3px; 
             cursor: pointer; 
             font-weight: 600; 
-            font-size: 12px; 
-            transition: all 0.2s; 
+            font-size: 11px; 
             text-transform: uppercase;
+            transition: background 0.2s;
         }
-        .btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
-        .btn:active { transform: translateY(0); }
-        .btn-secondary { background: #95a5a6; }
-        .btn-secondary:hover { background: #7f8c8d; }
+        .btn:hover { background: var(--accent-hover); }
+        .btn-secondary { background: #7f8c8d; }
+        .btn-secondary:hover { background: #95a5a6; }
         .btn-danger { background: var(--danger); }
-        .btn-danger:hover { background: #c0392b; }
+        .btn-danger:hover { background: #e74c3c; }
         
-        .mini-btn-group { display: flex; gap: 5px; }
+        .mini-btn-group { display: flex; gap: 4px; }
         .mini-btn { 
-            padding: 4px 8px; 
-            background: #ecf0f1; 
+            padding: 2px 8px; 
+            background: #fff; 
             border: 1px solid var(--border); 
             border-radius: 3px; 
             cursor: pointer; 
-            font-size: 14px;
+            font-size: 12px;
         }
-        .mini-btn:hover { background: #bdc3c7; }
+        .mini-btn:hover { background: #eee; }
 
         /* --- STATS BOX --- */
         .stats-box { 
-            background: #f8f9fa; 
-            padding: 12px; 
-            border-radius: 6px; 
+            background: #fff; 
+            padding: 10px; 
+            border-radius: 4px; 
             border: 1px solid var(--border); 
-            font-size: 12px; 
-            margin-bottom: 20px; 
-            box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
+            font-size: 11px; 
+            margin-bottom: 15px; 
+            font-family: monospace;
         }
-        .stat-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
-        .stat-val { font-weight: 700; font-family: monospace; }
-        .stat-divider { border-top: 1px solid #e0e0e0; margin: 8px 0; }
+        .stat-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
+        .stat-val { font-weight: 700; }
+        .stat-divider { border-top: 1px solid #eee; margin: 5px 0; }
 
         /* --- COLLAPSIBLE --- */
         .collapsible { 
-            background-color: #ecf0f1; 
+            background-color: #e0e0e0; 
             color: var(--text-main); 
             cursor: pointer; 
-            padding: 10px; 
+            padding: 8px; 
             width: 100%; 
             border: none; 
             text-align: left; 
             outline: none; 
-            font-size: 13px; 
-            font-weight: 600;
-            border-radius: 4px;
+            font-size: 12px; 
+            font-weight: 700;
+            border-radius: 3px;
             margin-top: 5px;
             display: flex;
             justify-content: space-between;
         }
-        .collapsible:after { content: '\002B'; font-weight: bold; }
-        .collapsible.active:after { content: "\2212"; }
+        .collapsible:after { content: '+'; }
+        .collapsible.active:after { content: '-'; }
         .content { 
-            padding: 0 10px; 
+            padding: 0 8px; 
             max-height: 0; 
             overflow: hidden; 
-            transition: max-height 0.3s ease-out; 
+            transition: max-height 0.2s ease-out; 
             background-color: #fff; 
-            border: 1px solid #ecf0f1;
+            border: 1px solid #e0e0e0;
             border-top: none;
         }
 
         /* --- LAYER LIST --- */
         #layer-list { 
             border: 1px solid var(--border); 
-            max-height: 150px; 
+            max-height: 120px; 
             overflow-y: auto; 
             background: #fff; 
-            border-radius: 4px;
+            border-radius: 3px;
+            margin-bottom: 5px;
         }
         .layer-item { 
-            padding: 6px 10px; 
+            padding: 4px 8px; 
             border-bottom: 1px solid #eee; 
-            font-size: 12px; 
+            font-size: 11px; 
             cursor: pointer; 
             display: flex; 
             align-items: center; 
             justify-content: space-between;
         }
-        .layer-item:hover { background: #f1f1f1; }
-        .layer-item.selected { background: #e8f4fc; border-left: 4px solid var(--accent); }
-        .layer-actions { display: flex; gap: 4px; }
-        .layer-icon { font-size: 10px; padding: 2px 4px; border: 1px solid #ccc; border-radius: 2px; background: #fff; }
+        .layer-item:hover { background: #f0f8ff; }
+        .layer-item.selected { background: #d6eaf8; border-left: 3px solid var(--accent); }
+        .layer-actions { display: flex; gap: 2px; }
+        .layer-icon { 
+            font-size: 10px; padding: 1px 4px; 
+            border: 1px solid #ccc; border-radius: 2px; 
+            background: #f9f9f9; cursor: pointer;
+        }
 
         /* --- MAIN VIEW --- */
         #main-view { flex-grow: 1; position: relative; outline: none; }
-        #overlay-controls { position: absolute; top: 20px; right: 20px; display: flex; gap: 10px; z-index: 10; }
+        #overlay-controls { position: absolute; top: 15px; right: 15px; display: flex; gap: 10px; z-index: 10; }
         .overlay-btn { 
             background: rgba(255,255,255,0.9); 
-            border: 1px solid #ccc; 
-            padding: 8px 12px; 
+            border: 1px solid #999; 
+            padding: 6px 10px; 
             cursor: pointer; 
-            font-size: 12px; 
-            border-radius: 4px; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+            font-size: 11px; 
+            border-radius: 3px; 
             font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .overlay-btn:hover { background: #fff; }
 
         /* --- LOG PANEL --- */
         #log-panel { 
             position: absolute; 
             bottom: 0; 
-            left: 380px; 
+            left: 360px; 
             right: 0; 
             background: var(--log-bg); 
             color: var(--log-text); 
-            font-family: 'Consolas', 'Monaco', monospace; 
-            font-size: 12px; 
+            font-family: 'Consolas', monospace; 
+            font-size: 11px; 
             z-index: 50; 
             display: flex; 
             flex-direction: column; 
-            border-top: 2px solid #1abc9c;
+            border-top: 2px solid #444;
         }
         .log-header { 
-            padding: 5px 15px; 
-            background: #1e2b3a; 
+            padding: 4px 10px; 
+            background: #333; 
             cursor: pointer; 
             display: flex; 
             justify-content: space-between; 
             font-weight: bold;
-            user-select: none;
         }
         .log-content { 
-            height: 30px; 
+            height: 25px; 
             overflow-y: auto; 
-            padding: 8px 15px; 
+            padding: 5px 10px; 
             white-space: pre-wrap; 
-            transition: height 0.3s;
+            transition: height 0.2s;
         }
-        .log-expanded .log-content { height: 180px; }
+        .log-expanded .log-content { height: 150px; }
         
         /* Tooltip */
         [data-tooltip]:hover::after {
@@ -238,16 +239,17 @@
             position: absolute;
             background: #333;
             color: #fff;
-            padding: 5px;
+            padding: 4px 8px;
             border-radius: 4px;
-            font-size: 11px;
+            font-size: 10px;
             z-index: 1000;
             white-space: nowrap;
             transform: translateY(-100%);
+            margin-top: -5px;
         }
     </style>
 
-    <!-- Three.js Imports (ES Modules) -->
+    <!-- Import Map for Three.js -->
     <script type="importmap">
         {
             "imports": {
@@ -262,10 +264,10 @@
     <!-- SIDEBAR -->
     <div id="sidebar">
         <div class="panel-header">
-            <h2>Dust Container Spec</h2>
+            <h2>Dust Container Spec V1</h2>
             <div class="mini-btn-group">
-                <button class="mini-btn" id="btn-undo" title="Undo (Ctrl+Z)">↶</button>
-                <button class="mini-btn" id="btn-redo" title="Redo (Ctrl+Y)">↷</button>
+                <button class="mini-btn" id="btn-undo" title="Undo">↶</button>
+                <button class="mini-btn" id="btn-redo" title="Redo">↷</button>
             </div>
         </div>
         
@@ -306,7 +308,7 @@
                     <input type="number" id="num-H">
                 </div>
                 <div class="input-row">
-                    <label title="Length of triangular prism extension">Hopper Ext (X)</label>
+                    <label title="Extension length of the wedge">Hopper Ext (X)</label>
                     <input type="range" id="inp-XHop" min="0" max="1500" step="10">
                     <input type="number" id="num-XHop">
                 </div>
@@ -338,7 +340,7 @@
                     <input type="number" id="num-HPocket" value="91" disabled>
                 </div>
                 <div class="input-row">
-                    <label>Spacing (R-L)</label>
+                    <label>Spacing (Gap)</label>
                     <input type="number" id="num-SPocket" value="142" disabled>
                 </div>
             </div>
@@ -367,7 +369,7 @@
                     <input type="checkbox" id="chk-lid-adv">
                 </div>
                 <div class="input-row" id="row-lid-dens" style="display:none;">
-                    <label>Lid Density (kg/m³)</label>
+                    <label>Lid Density</label>
                     <input type="number" id="num-RhoLid" value="7850">
                 </div>
             </div>
@@ -388,8 +390,8 @@
                     <input type="number" id="num-RhoDust" value="1850">
                 </div>
                 <div class="input-row">
-                    <label style="cursor:help; border-bottom:1px dotted #999;" title="Humidity in Sweden varies significantly (70-90% RH). This can increase dust weight by 5-15% depending on porosity.">Humidity Info (?)</label>
-                    <span style="font-size:11px; color:#7f8c8d;">(Hover for info)</span>
+                    <label data-tooltip="Humidity in Sweden (70-90% RH) can increase dust weight by 5-15%.">Humidity Info (?)</label>
+                    <span style="font-size:10px; color:#666;">(Hover for info)</span>
                 </div>
                 <div class="input-row">
                     <label>Fill Percentage</label>
@@ -406,8 +408,8 @@
                     <button class="btn" id="btn-import" style="margin-top:0;">Import STL</button>
                     <input type="file" id="file-input" accept=".stl" style="display: none;">
                 </div>
-                <div style="font-size:11px; color:#7f8c8d; margin-top:5px;">
-                    <i>Controls: Click to Select. WASD to Move.</i>
+                <div style="font-size:10px; color:#666; margin-top:5px;">
+                    <i>Select object to move (WASD).</i>
                 </div>
             </div>
 
@@ -477,7 +479,7 @@
         import { STLExporter } from 'three/addons/exporters/STLExporter.js';
 
         // --- CONFIGURATION ---
-        const APP_VERSION = "2.0.0";
+        const APP_VERSION = "1.0.0";
         const DEFAULTS = {
             L: 1400, W: 1300, H: 900, x_hopper: 700,
             t_wall: 5,
@@ -518,12 +520,12 @@
             
             // Scene
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0xdcdcdc); // Concrete gray
+            scene.background = new THREE.Color(0xb0b0b0); // Concrete gray
 
             // Camera (Orthographic for Isometric)
             const aspect = container.clientWidth / container.clientHeight;
             const d = 3000; 
-            camera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, 1, 50000);
+            camera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, -5000, 10000);
             resetCameraView();
 
             // Renderer
@@ -558,7 +560,7 @@
             scene.add(dirLight);
 
             // Ground Grid (Habbo Style)
-            gridHelper = new THREE.GridHelper(10000, 100, 0x7f8c8d, 0xbdc3c7);
+            gridHelper = new THREE.GridHelper(10000, 100, 0x555555, 0x888888);
             scene.add(gridHelper);
 
             // Reference Cube
@@ -625,7 +627,6 @@
             // "Stitched": Rectangular Block (L x W x H) + Triangular Prism (x_hopper x W x H)
             // Profile Side View:
             // (0,0) -> (L,0) -> (L+x_hopper, H) -> (0,H) -> (0,0)
-            // Note: Standard skip shape. Back is vertical. Front is slanted outwards.
             
             // Floor (Rectangular part only, as wedge overhangs)
             const floorGeo = new THREE.BoxGeometry(L, t_wall, W);
@@ -694,11 +695,10 @@
                 frameGroup = new THREE.Group();
                 const hf = params.frame_h;
                 const wp = params.frame_pocket_w; // 230
-                const sp = params.frame_pocket_s; // 142
+                const sp = params.frame_pocket_s; // 142 (Gap between pockets)
                 
-                // Logic: Center the pocket group (Pocket + Space + Pocket)
-                // Group Width = 230 + 142 + 230 = 602
-                // Remaining width is split for outer supports
+                // Logic: Center the pocket group (Pocket + Gap + Pocket)
+                // Total Width of Fork Area = 230 + 142 + 230 = 602
                 const groupW = (2 * wp) + sp;
                 const margin = (W - groupW) / 2;
                 
@@ -765,7 +765,6 @@
             const fillH = H * (params.fill_percent / 100);
             if (fillH > 0) {
                 // Simplified fill volume (Box)
-                // For V2, we could match the slant, but box is acceptable for volume viz
                 const dustGeo = new THREE.BoxGeometry(L - 2*t_wall, fillH, W - 2*t_wall);
                 dustMesh = new THREE.Mesh(dustGeo, matDust);
                 dustMesh.position.set(0, fillH/2 + t_wall, 0);
@@ -783,7 +782,7 @@
 
         function addEdge(mesh) {
             const edges = new THREE.EdgesGeometry(mesh.geometry);
-            const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x000000, opacity: 0.2, transparent: true }));
+            const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x000000, opacity: 0.3, transparent: true }));
             mesh.add(line);
         }
 
@@ -836,7 +835,6 @@
             // CoG Calculation (Simplified Centroids)
             // Empty: Weighted avg of Shell + Frame + Lid
             // Frame is low (y < 0). Shell is mid. Lid is high.
-            // Approx:
             const y_frame = -params.frame_h/2000;
             const y_shell = H_m / 3; 
             const y_lid = H_m;
