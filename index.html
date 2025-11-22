@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dust Container Engineer - Pro V3</title>
+    <title>Dust Container Engineer - Spec V4 (Final)</title>
     
     <style>
         :root {
@@ -262,7 +262,7 @@
     <!-- SIDEBAR -->
     <div id="sidebar">
         <div class="panel-header">
-            <h2>Dust Container Spec V3</h2>
+            <h2>Dust Container Spec V4</h2>
             <div class="mini-btn-group">
                 <button class="mini-btn" id="btn-undo" title="Undo">↶</button>
                 <button class="mini-btn" id="btn-redo" title="Redo">↷</button>
@@ -477,7 +477,7 @@
         import { STLExporter } from 'three/addons/exporters/STLExporter.js';
 
         // --- CONFIGURATION ---
-        const APP_VERSION = "3.0.0";
+        const APP_VERSION = "4.0.0";
         const DEFAULTS = {
             L: 1400, W: 1300, H: 900, x_hopper: 700,
             t_wall: 5,
@@ -625,13 +625,17 @@
             const { L, W, H, x_hopper, t_wall, frame_h, include_frame } = params;
             
             // Vertical Offset: Container sits ON TOP of the frame
+            // Frame sits on Y=0. Container sits on Y=frame_h.
             const y_offset = include_frame ? frame_h : 0;
 
             // 1. SHELL CONSTRUCTION
-            // Profile Side View: (0,0) -> (L,0) -> (L+x_hopper, H) -> (0,H) -> (0,0)
-            // This creates the overhang.
+            // Sketch Logic:
+            // Rectangular part: x from 0 to L.
+            // Hopper part: x from -x_hopper to 0.
+            // Top is flat across -x_hopper to L.
+            // Slant connects (-x_hopper, H) to (0, 0).
             
-            // Floor
+            // Floor (Rectangular part only)
             const floorGeo = new THREE.BoxGeometry(L, t_wall, W);
             const floor = new THREE.Mesh(floorGeo, matShell);
             floor.position.set(L/2, y_offset + t_wall/2, 0); // Centered on L/2
@@ -641,16 +645,16 @@
 
             // Side Walls (Extruded Profile)
             const shape = new THREE.Shape();
-            shape.moveTo(0, 0); // Bottom Back
-            shape.lineTo(L, 0);  // Bottom Front
+            shape.moveTo(0, 0); // Bottom Left of Rect
+            shape.lineTo(L, 0); // Bottom Right of Rect
+            shape.lineTo(L, H); // Top Right
             if (x_hopper > 1) {
-                shape.lineTo(L + x_hopper, H); // Top Front (Hopper Tip)
-                shape.lineTo(0, H);           // Top Back
+                shape.lineTo(-x_hopper, H); // Top Left (Hopper Tip)
+                shape.lineTo(0, 0); // Close loop to Bottom Left
             } else {
-                shape.lineTo(L, H);
                 shape.lineTo(0, H);
+                shape.lineTo(0, 0);
             }
-            shape.lineTo(0, 0); // Close
 
             const wallGeo = new THREE.ExtrudeGeometry(shape, { depth: t_wall, bevelEnabled: false });
             
@@ -672,8 +676,8 @@
                 const fwGeo = new THREE.BoxGeometry(slantLen, W - 2*t_wall, t_wall);
                 const fw = new THREE.Mesh(fwGeo, matShell);
                 
-                // Position at midpoint of slant line from (L,0) to (L+x, H)
-                const midX = L + x_hopper/2;
+                // Position at midpoint of slant line from (-x, H) to (0,0)
+                const midX = -x_hopper/2;
                 const midY = H/2;
                 fw.position.set(midX, y_offset + midY, 0);
                 fw.rotation.x = Math.PI/2;
@@ -682,14 +686,14 @@
                 containerGroup.add(fw); addEdge(fw);
             } else {
                 const fw = new THREE.Mesh(new THREE.BoxGeometry(t_wall, H, W - 2*t_wall), matShell);
-                fw.position.set(L - t_wall/2, y_offset + H/2, 0);
+                fw.position.set(-t_wall/2, y_offset + H/2, 0);
                 fw.castShadow = true; fw.receiveShadow = true;
                 containerGroup.add(fw); addEdge(fw);
             }
 
             // Back Wall
             const backWall = new THREE.Mesh(new THREE.BoxGeometry(t_wall, H, W - 2*t_wall), matShell);
-            backWall.position.set(t_wall/2, y_offset + H/2, 0);
+            backWall.position.set(L - t_wall/2, y_offset + H/2, 0);
             backWall.castShadow = true; backWall.receiveShadow = true;
             containerGroup.add(backWall); addEdge(backWall);
 
@@ -745,13 +749,13 @@
             // 3. LID
             if (params.include_lid) {
                 const lidShape = new THREE.Shape();
-                lidShape.moveTo(0, -W/2);
-                lidShape.lineTo(L + x_hopper, -W/2);
-                lidShape.lineTo(L + x_hopper, W/2);
-                lidShape.lineTo(0, W/2);
-                lidShape.lineTo(0, -W/2);
+                lidShape.moveTo(-x_hopper, -W/2);
+                lidShape.lineTo(L, -W/2);
+                lidShape.lineTo(L, W/2);
+                lidShape.lineTo(-x_hopper, W/2);
+                lidShape.lineTo(-x_hopper, -W/2);
 
-                const cx = (L + x_hopper) - params.lid_offset;
+                const cx = (-x_hopper) + params.lid_offset; // Offset from hopper edge
                 const holePath = new THREE.Path();
                 holePath.absarc(cx, 0, params.r_hole, 0, Math.PI * 2, true);
                 lidShape.holes.push(holePath);
@@ -767,7 +771,7 @@
             // 4. DUST FILL
             const fillH = H * (params.fill_percent / 100);
             if (fillH > 0) {
-                // Simplified fill volume (Box)
+                // Simplified fill volume (Box in rect part)
                 const dustGeo = new THREE.BoxGeometry(L - 2*t_wall, fillH, W - 2*t_wall);
                 dustMesh = new THREE.Mesh(dustGeo, matDust);
                 dustMesh.position.set(L/2, y_offset + fillH/2 + t_wall, 0);
@@ -836,7 +840,7 @@
             
             // Shell CoG: Above frame.
             const y_shell = frameH_m + (H_m / 3); 
-            const x_shell = L_m / 2 + (xHop_m / 5); // Shifted slightly forward
+            const x_shell = L_m / 2 - (xHop_m / 5); // Shifted slightly backward due to hopper
 
             const m_frame = V_frame * params.rho_shell;
             const m_shell_only = V_shell_vol * params.rho_shell;
@@ -979,23 +983,21 @@
             const snap = params.snap ? 100 : 1;
             
             // Camera-Relative Movement Logic
-            // Get camera direction vector projected on XZ plane
             const camDir = new THREE.Vector3();
             camera.getWorldDirection(camDir);
             camDir.y = 0;
             camDir.normalize();
 
             // Determine dominant axis for "Forward" (W)
-            // If Z is dominant negative -> Forward is -Z
-            // If X is dominant negative -> Forward is -X
-            let forward = new THREE.Vector3(0, 0, -1); // Default North
+            let forward = new THREE.Vector3(0, 0, -1); 
             if (Math.abs(camDir.x) > Math.abs(camDir.z)) {
                 forward.set(Math.sign(camDir.x), 0, 0);
             } else {
                 forward.set(0, 0, Math.sign(camDir.z));
             }
             
-            const right = new THREE.Vector3().crossVectors(new THREE.Vector3(0,1,0), forward).normalize();
+            const up = new THREE.Vector3(0, 1, 0);
+            const right = new THREE.Vector3().crossVectors(forward, up).normalize();
 
             let move = new THREE.Vector3();
             
@@ -1246,11 +1248,11 @@
         }
 
         function saveState() {
-            localStorage.setItem('dustContainerConfigV3', JSON.stringify(params));
+            localStorage.setItem('dustContainerConfigV4', JSON.stringify(params));
         }
 
         function loadState() {
-            const s = localStorage.getItem('dustContainerConfigV3');
+            const s = localStorage.getItem('dustContainerConfigV4');
             if (s) {
                 try {
                     const p = JSON.parse(s);
