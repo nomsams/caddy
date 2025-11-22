@@ -3,17 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dust Container Engineer - Spec V1</title>
+    <title>Dust Container Engineer - Pro V3</title>
     
     <style>
         :root {
-            --bg-color: #b0b0b0; /* Concrete slab gray */
-            --panel-bg: #f5f5f5;
+            --bg-color: #b0b0b0;
+            --panel-bg: #f4f4f4;
             --text-main: #333;
-            --accent: #2980b9; /* Engineering Blue */
+            --accent: #2980b9;
             --accent-hover: #3498db;
             --danger: #c0392b;
-            --success: #27ae60;
             --border: #ccc;
             --log-bg: #222;
             --log-text: #0f0;
@@ -233,7 +232,6 @@
         }
         .log-expanded .log-content { height: 150px; }
         
-        /* Tooltip */
         [data-tooltip]:hover::after {
             content: attr(data-tooltip);
             position: absolute;
@@ -264,7 +262,7 @@
     <!-- SIDEBAR -->
     <div id="sidebar">
         <div class="panel-header">
-            <h2>Dust Container Spec V1</h2>
+            <h2>Dust Container Spec V3</h2>
             <div class="mini-btn-group">
                 <button class="mini-btn" id="btn-undo" title="Undo">↶</button>
                 <button class="mini-btn" id="btn-redo" title="Redo">↷</button>
@@ -479,7 +477,7 @@
         import { STLExporter } from 'three/addons/exporters/STLExporter.js';
 
         // --- CONFIGURATION ---
-        const APP_VERSION = "1.0.0";
+        const APP_VERSION = "3.0.0";
         const DEFAULTS = {
             L: 1400, W: 1300, H: 900, x_hopper: 700,
             t_wall: 5,
@@ -487,7 +485,8 @@
             include_frame: true,
             include_lid: false, t_lid: 3, r_hole: 150, lid_offset: 300,
             rho_shell: 7850, rho_dust: 1850, fill_percent: 80,
-            move_step: 50, snap: true, show_collisions: true
+            move_step: 50, snap: true, show_collisions: true,
+            show_cog_e: false, show_cog_f: true
         };
 
         // --- STATE ---
@@ -503,6 +502,8 @@
         let collisionBoxes = [];
         let selectedObject = null;
         let refCube, cogArrowEmpty, cogArrowFilled;
+        let localCoG_E = new THREE.Vector3();
+        let localCoG_F = new THREE.Vector3();
 
         // --- INITIALIZATION ---
         function init() {
@@ -571,7 +572,7 @@
             refCube.visible = false;
             scene.add(refCube);
 
-            // CoG Arrows
+            // CoG Arrows (Global objects, updated in animate)
             const headLen = 200;
             const headW = 100;
             cogArrowEmpty = new THREE.ArrowHelper(new THREE.Vector3(0,-1,0), new THREE.Vector3(0,0,0), 1000, 0x2980b9, headLen, headW);
@@ -621,42 +622,44 @@
                 opacity: 0.7 
             });
 
-            const { L, W, H, x_hopper, t_wall } = params;
+            const { L, W, H, x_hopper, t_wall, frame_h, include_frame } = params;
+            
+            // Vertical Offset: Container sits ON TOP of the frame
+            const y_offset = include_frame ? frame_h : 0;
 
             // 1. SHELL CONSTRUCTION
-            // "Stitched": Rectangular Block (L x W x H) + Triangular Prism (x_hopper x W x H)
-            // Profile Side View:
-            // (0,0) -> (L,0) -> (L+x_hopper, H) -> (0,H) -> (0,0)
+            // Profile Side View: (0,0) -> (L,0) -> (L+x_hopper, H) -> (0,H) -> (0,0)
+            // This creates the overhang.
             
-            // Floor (Rectangular part only, as wedge overhangs)
+            // Floor
             const floorGeo = new THREE.BoxGeometry(L, t_wall, W);
             const floor = new THREE.Mesh(floorGeo, matShell);
-            floor.position.set(0, t_wall/2, 0);
+            floor.position.set(L/2, y_offset + t_wall/2, 0); // Centered on L/2
             floor.castShadow = true; floor.receiveShadow = true;
             containerGroup.add(floor);
             addEdge(floor);
 
             // Side Walls (Extruded Profile)
             const shape = new THREE.Shape();
-            shape.moveTo(-L/2, 0); // Bottom Back
-            shape.lineTo(L/2, 0);  // Bottom Front
+            shape.moveTo(0, 0); // Bottom Back
+            shape.lineTo(L, 0);  // Bottom Front
             if (x_hopper > 1) {
-                shape.lineTo(L/2 + x_hopper, H); // Top Front (Hopper Tip)
-                shape.lineTo(-L/2, H);           // Top Back
+                shape.lineTo(L + x_hopper, H); // Top Front (Hopper Tip)
+                shape.lineTo(0, H);           // Top Back
             } else {
-                shape.lineTo(L/2, H);
-                shape.lineTo(-L/2, H);
+                shape.lineTo(L, H);
+                shape.lineTo(0, H);
             }
-            shape.lineTo(-L/2, 0); // Close
+            shape.lineTo(0, 0); // Close
 
             const wallGeo = new THREE.ExtrudeGeometry(shape, { depth: t_wall, bevelEnabled: false });
             
             const wallLeft = new THREE.Mesh(wallGeo, matShell);
-            wallLeft.position.set(0, 0, W/2 - t_wall);
+            wallLeft.position.set(0, y_offset, W/2 - t_wall);
             wallLeft.castShadow = true; wallLeft.receiveShadow = true;
             
             const wallRight = new THREE.Mesh(wallGeo, matShell);
-            wallRight.position.set(0, 0, -W/2);
+            wallRight.position.set(0, y_offset, -W/2);
             wallRight.castShadow = true; wallRight.receiveShadow = true;
             
             containerGroup.add(wallLeft); addEdge(wallLeft);
@@ -665,35 +668,34 @@
             // Front Wall (Slanted)
             if (x_hopper > 1) {
                 const slantLen = Math.sqrt(x_hopper**2 + H**2);
-                const angle = Math.atan2(H, x_hopper);
+                const angle = Math.atan2(H, x_hopper); // Angle of the slant
                 const fwGeo = new THREE.BoxGeometry(slantLen, W - 2*t_wall, t_wall);
                 const fw = new THREE.Mesh(fwGeo, matShell);
                 
-                // Position at midpoint of slant
-                const midX = L/2 + x_hopper/2;
+                // Position at midpoint of slant line from (L,0) to (L+x, H)
+                const midX = L + x_hopper/2;
                 const midY = H/2;
-                fw.position.set(midX, midY, 0);
+                fw.position.set(midX, y_offset + midY, 0);
                 fw.rotation.x = Math.PI/2;
-                fw.rotation.y = -angle;
+                fw.rotation.y = -angle; // Rotate to match slant
                 fw.castShadow = true; fw.receiveShadow = true;
                 containerGroup.add(fw); addEdge(fw);
             } else {
                 const fw = new THREE.Mesh(new THREE.BoxGeometry(t_wall, H, W - 2*t_wall), matShell);
-                fw.position.set(L/2 - t_wall/2, H/2, 0);
+                fw.position.set(L - t_wall/2, y_offset + H/2, 0);
                 fw.castShadow = true; fw.receiveShadow = true;
                 containerGroup.add(fw); addEdge(fw);
             }
 
             // Back Wall
             const backWall = new THREE.Mesh(new THREE.BoxGeometry(t_wall, H, W - 2*t_wall), matShell);
-            backWall.position.set(-L/2 + t_wall/2, H/2, 0);
+            backWall.position.set(t_wall/2, y_offset + H/2, 0);
             backWall.castShadow = true; backWall.receiveShadow = true;
             containerGroup.add(backWall); addEdge(backWall);
 
-            // 2. FORKLIFT FRAME
-            if (params.include_frame) {
+            // 2. FORKLIFT FRAME (Green Part)
+            if (include_frame) {
                 frameGroup = new THREE.Group();
-                const hf = params.frame_h;
                 const wp = params.frame_pocket_w; // 230
                 const sp = params.frame_pocket_s; // 142 (Gap between pockets)
                 
@@ -702,38 +704,39 @@
                 const groupW = (2 * wp) + sp;
                 const margin = (W - groupW) / 2;
                 
-                const yFrame = -hf/2;
+                // Frame sits from Y=0 to Y=frame_h
+                const yFrame = frame_h/2;
 
                 // Geometries
-                const beamOuterGeo = new THREE.BoxGeometry(L, hf, margin);
-                const beamCenterGeo = new THREE.BoxGeometry(L, hf, sp);
+                const beamOuterGeo = new THREE.BoxGeometry(L, frame_h, margin);
+                const beamCenterGeo = new THREE.BoxGeometry(L, frame_h, sp);
                 
                 // Left Outer Support
                 const beamL = new THREE.Mesh(beamOuterGeo, matFrame);
-                beamL.position.set(0, yFrame, W/2 - margin/2);
+                beamL.position.set(L/2, yFrame, W/2 - margin/2);
                 beamL.castShadow = true;
                 frameGroup.add(beamL); addEdge(beamL);
 
                 // Right Outer Support
                 const beamR = new THREE.Mesh(beamOuterGeo, matFrame);
-                beamR.position.set(0, yFrame, -W/2 + margin/2);
+                beamR.position.set(L/2, yFrame, -W/2 + margin/2);
                 beamR.castShadow = true;
                 frameGroup.add(beamR); addEdge(beamR);
 
                 // Center Web
                 const beamC = new THREE.Mesh(beamCenterGeo, matFrame);
-                beamC.position.set(0, yFrame, 0);
+                beamC.position.set(L/2, yFrame, 0);
                 beamC.castShadow = true;
                 frameGroup.add(beamC); addEdge(beamC);
 
                 // Top/Bottom Plates for ruggedness
                 const plateT = 5;
                 const topPlate = new THREE.Mesh(new THREE.BoxGeometry(L, plateT, W), matFrame);
-                topPlate.position.set(0, -plateT/2, 0);
+                topPlate.position.set(L/2, frame_h - plateT/2, 0);
                 frameGroup.add(topPlate);
                 
                 const botPlate = new THREE.Mesh(new THREE.BoxGeometry(L, plateT, W), matFrame);
-                botPlate.position.set(0, -hf + plateT/2, 0);
+                botPlate.position.set(L/2, plateT/2, 0);
                 frameGroup.add(botPlate);
 
                 containerGroup.add(frameGroup);
@@ -742,13 +745,13 @@
             // 3. LID
             if (params.include_lid) {
                 const lidShape = new THREE.Shape();
-                lidShape.moveTo(-L/2, -W/2);
-                lidShape.lineTo(L/2 + x_hopper, -W/2);
-                lidShape.lineTo(L/2 + x_hopper, W/2);
-                lidShape.lineTo(-L/2, W/2);
-                lidShape.lineTo(-L/2, -W/2);
+                lidShape.moveTo(0, -W/2);
+                lidShape.lineTo(L + x_hopper, -W/2);
+                lidShape.lineTo(L + x_hopper, W/2);
+                lidShape.lineTo(0, W/2);
+                lidShape.lineTo(0, -W/2);
 
-                const cx = (L/2 + x_hopper) - params.lid_offset;
+                const cx = (L + x_hopper) - params.lid_offset;
                 const holePath = new THREE.Path();
                 holePath.absarc(cx, 0, params.r_hole, 0, Math.PI * 2, true);
                 lidShape.holes.push(holePath);
@@ -756,7 +759,7 @@
                 const lidGeo = new THREE.ExtrudeGeometry(lidShape, { depth: params.t_lid, bevelEnabled: false });
                 lidMesh = new THREE.Mesh(lidGeo, matLid);
                 lidMesh.rotation.x = Math.PI / 2;
-                lidMesh.position.set(0, H + params.t_lid, 0);
+                lidMesh.position.set(0, y_offset + H + params.t_lid, 0);
                 lidMesh.castShadow = true;
                 containerGroup.add(lidMesh); addEdge(lidMesh);
             }
@@ -767,7 +770,7 @@
                 // Simplified fill volume (Box)
                 const dustGeo = new THREE.BoxGeometry(L - 2*t_wall, fillH, W - 2*t_wall);
                 dustMesh = new THREE.Mesh(dustGeo, matDust);
-                dustMesh.position.set(0, fillH/2 + t_wall, 0);
+                dustMesh.position.set(L/2, y_offset + fillH/2 + t_wall, 0);
                 containerGroup.add(dustMesh);
             }
 
@@ -793,28 +796,22 @@
             const H_m = params.H / 1000;
             const xHop_m = params.x_hopper / 1000;
             const t_m = params.t_wall / 1000;
+            const frameH_m = params.include_frame ? params.frame_h / 1000 : 0;
 
             // Volume Calculation
-            // Rectangular Part Internal
             const V_rect_int = (L_m - 2*t_m) * (W_m - 2*t_m) * (H_m - t_m);
-            // Wedge Part Internal (Triangular Prism)
-            // Base Area = 0.5 * xHop * H. Width = W.
             const V_wedge_int = 0.5 * (xHop_m) * (H_m - t_m) * (W_m - 2*t_m);
-            
             const V_total = Math.max(0, V_rect_int + V_wedge_int);
             const V_fill = V_total * (params.fill_percent / 100);
 
             // Mass Calculation
-            // Shell Volume = Outer - Inner
             const V_rect_out = L_m * W_m * H_m;
             const V_wedge_out = 0.5 * xHop_m * H_m * W_m;
             const V_shell_vol = (V_rect_out + V_wedge_out) - V_total;
 
             let V_frame = 0;
             if (params.include_frame) {
-                const hf_m = params.frame_h / 1000;
-                // Frame is roughly 40% solid due to pockets
-                V_frame = L_m * W_m * hf_m * 0.4; 
+                V_frame = L_m * W_m * frameH_m * 0.4; // 40% solidity
             }
 
             const m_shell = (V_shell_vol + V_frame) * params.rho_shell;
@@ -832,23 +829,31 @@
 
             const m_total = m_shell + m_lid + m_dust;
 
-            // CoG Calculation (Simplified Centroids)
-            // Empty: Weighted avg of Shell + Frame + Lid
-            // Frame is low (y < 0). Shell is mid. Lid is high.
-            const y_frame = -params.frame_h/2000;
-            const y_shell = H_m / 3; 
-            const y_lid = H_m;
+            // CoG Calculation (Relative to Container Origin at (0,0,0) which is back-bottom-left of frame)
+            // Frame CoG: Center of L, Half height of frame
+            const y_frame = frameH_m / 2;
+            const x_frame = L_m / 2;
             
+            // Shell CoG: Above frame.
+            const y_shell = frameH_m + (H_m / 3); 
+            const x_shell = L_m / 2 + (xHop_m / 5); // Shifted slightly forward
+
             const m_frame = V_frame * params.rho_shell;
             const m_shell_only = V_shell_vol * params.rho_shell;
             
-            const cogY_e = (m_frame*y_frame + m_shell_only*y_shell + m_lid*y_lid) / (m_frame + m_shell_only + m_lid);
-            const cogX_e = xHop_m / 5; // Slightly forward due to hopper
+            // Empty CoG
+            const cogY_e = (m_frame*y_frame + m_shell_only*y_shell + m_lid*(frameH_m + H_m)) / (m_frame + m_shell_only + m_lid);
+            const cogX_e = x_shell; // Approx
 
-            // Filled: Add dust mass
-            const y_dust = (H_m * (params.fill_percent/100)) / 2;
-            const cogY_f = (m_total * cogY_e + m_dust * y_dust) / (m_total + m_dust); // Approx
-            const cogX_f = cogX_e;
+            // Filled CoG
+            const y_dust = frameH_m + (H_m * (params.fill_percent/100)) / 2;
+            const x_dust = L_m / 2; // Dust mostly in rect part
+            const cogY_f = (m_total * cogY_e + m_dust * y_dust) / (m_total + m_dust);
+            const cogX_f = (m_total * cogX_e + m_dust * x_dust) / (m_total + m_dust);
+
+            // Store Local CoG for Arrow Updates
+            localCoG_E.set(cogX_e * 1000, cogY_e * 1000, 0);
+            localCoG_F.set(cogX_f * 1000, cogY_f * 1000, 0);
 
             // Update UI
             document.getElementById('val-vol-int').innerText = V_total.toFixed(3) + " m³";
@@ -859,17 +864,27 @@
             
             document.getElementById('val-cog-empty').innerText = `X:${cogX_e.toFixed(2)}, Y:${cogY_e.toFixed(2)}`;
             document.getElementById('val-cog-filled').innerText = `X:${cogX_f.toFixed(2)}, Y:${cogY_f.toFixed(2)}`;
+        }
+
+        function updateCoGArrows() {
+            if (!containerGroup) return;
+            
+            // Update visibility
+            cogArrowEmpty.visible = params.show_cog_e;
+            cogArrowFilled.visible = params.show_cog_f;
+
+            // Calculate World Position
+            // Container Position + Local CoG
+            const worldPosE = containerGroup.position.clone().add(localCoG_E);
+            const worldPosF = containerGroup.position.clone().add(localCoG_F);
 
             // Update Arrows
-            if (cogArrowEmpty) {
-                cogArrowEmpty.position.set(cogX_e * 1000, cogY_e * 1000, 0);
-                cogArrowFilled.position.set(cogX_f * 1000, cogY_f * 1000, 0);
-            }
+            cogArrowEmpty.position.copy(worldPosE);
+            cogArrowFilled.position.copy(worldPosF);
         }
 
         // --- UI & INTERACTION ---
         function setupUI() {
-            // Helper for binding inputs
             const bind = (idRange, idNum, key, cb) => {
                 const r = document.getElementById(idRange);
                 const n = document.getElementById(idNum);
@@ -928,11 +943,10 @@
             document.getElementById('num-Step').addEventListener('change', (e) => { params.move_step = parseFloat(e.target.value); });
             document.getElementById('chk-snap').addEventListener('change', (e) => { params.snap = e.target.checked; });
             document.getElementById('chk-ref').addEventListener('change', (e) => { refCube.visible = e.target.checked; });
-            document.getElementById('chk-cog-e').addEventListener('change', (e) => { cogArrowEmpty.visible = e.target.checked; });
-            document.getElementById('chk-cog-f').addEventListener('change', (e) => { cogArrowFilled.visible = e.target.checked; });
+            document.getElementById('chk-cog-e').addEventListener('change', (e) => { params.show_cog_e = e.target.checked; });
+            document.getElementById('chk-cog-f').addEventListener('change', (e) => { params.show_cog_f = e.target.checked; });
             document.getElementById('chk-col').addEventListener('change', (e) => { params.show_collisions = e.target.checked; checkCollisions(); });
 
-            // Buttons
             document.getElementById('btn-reset-view').addEventListener('click', resetCameraView);
             document.getElementById('btn-export-stl').addEventListener('click', exportContainerSTL);
             document.getElementById('btn-export-lid').addEventListener('click', exportLidSTL);
@@ -944,7 +958,6 @@
             document.getElementById('btn-undo').addEventListener('click', undo);
             document.getElementById('btn-redo').addEventListener('click', redo);
 
-            // Collapsibles
             const coll = document.getElementsByClassName("collapsible");
             for (let i = 0; i < coll.length; i++) {
                 coll[i].addEventListener("click", function() {
@@ -964,18 +977,37 @@
             if (!selectedObject) return;
             const step = params.move_step;
             const snap = params.snap ? 100 : 1;
-            let dx = 0, dz = 0;
             
-            switch(event.key.toLowerCase()) {
-                case 'w': dz = -step; break;
-                case 's': dz = step; break;
-                case 'a': dx = -step; break;
-                case 'd': dx = step; break;
+            // Camera-Relative Movement Logic
+            // Get camera direction vector projected on XZ plane
+            const camDir = new THREE.Vector3();
+            camera.getWorldDirection(camDir);
+            camDir.y = 0;
+            camDir.normalize();
+
+            // Determine dominant axis for "Forward" (W)
+            // If Z is dominant negative -> Forward is -Z
+            // If X is dominant negative -> Forward is -X
+            let forward = new THREE.Vector3(0, 0, -1); // Default North
+            if (Math.abs(camDir.x) > Math.abs(camDir.z)) {
+                forward.set(Math.sign(camDir.x), 0, 0);
+            } else {
+                forward.set(0, 0, Math.sign(camDir.z));
             }
             
-            if (dx !== 0 || dz !== 0) {
-                selectedObject.position.x += dx;
-                selectedObject.position.z += dz;
+            const right = new THREE.Vector3().crossVectors(new THREE.Vector3(0,1,0), forward).normalize();
+
+            let move = new THREE.Vector3();
+            
+            switch(event.key.toLowerCase()) {
+                case 'w': move.copy(forward).multiplyScalar(step); break;
+                case 's': move.copy(forward).multiplyScalar(-step); break;
+                case 'a': move.copy(right).multiplyScalar(-step); break;
+                case 'd': move.copy(right).multiplyScalar(step); break;
+            }
+            
+            if (move.lengthSq() > 0) {
+                selectedObject.position.add(move);
                 if (params.snap) {
                     selectedObject.position.x = Math.round(selectedObject.position.x / snap) * snap;
                     selectedObject.position.z = Math.round(selectedObject.position.z / snap) * snap;
@@ -1006,7 +1038,6 @@
         }
 
         function checkCollisions() {
-            // Clear old boxes
             collisionBoxes.forEach(b => scene.remove(b));
             collisionBoxes = [];
             document.getElementById('collision-alert').style.display = 'none';
@@ -1021,7 +1052,7 @@
                     const dx = intersection.max.x - intersection.min.x;
                     const dy = intersection.max.y - intersection.min.y;
                     const dz = intersection.max.z - intersection.min.z;
-                    const vol = (dx*dy*dz) / 1000000; // Liters
+                    const vol = (dx*dy*dz) / 1000000; 
                     
                     log(`Collision detected! Vol: ${vol.toFixed(2)} L`);
                     
@@ -1059,13 +1090,14 @@
                     const geometry = loader.parse(e.target.result);
                     geometry.center(); 
                     geometry.computeBoundingBox();
-                    const h = geometry.boundingBox.max.y - geometry.boundingBox.min.y;
+                    // Ground the object: Shift Y so min.y is 0
+                    const h = geometry.boundingBox.min.y;
+                    geometry.translate(0, -h, 0);
                     
                     const material = new THREE.MeshStandardMaterial({ color: 0x95a5a6 });
                     const mesh = new THREE.Mesh(geometry, material);
                     mesh.name = file.name;
                     mesh.rotation.x = -Math.PI / 2; 
-                    mesh.position.set(0, h/2, 0); 
                     mesh.castShadow = true;
                     
                     scene.add(mesh);
@@ -1169,6 +1201,8 @@
             set('num-RhoDust', params.rho_dust);
             set('inp-Fill', params.fill_percent);
             document.getElementById('lbl-Fill').innerText = params.fill_percent + "%";
+            check('chk-cog-e', params.show_cog_e);
+            check('chk-cog-f', params.show_cog_f);
         }
 
         // --- UTILS ---
@@ -1212,11 +1246,11 @@
         }
 
         function saveState() {
-            localStorage.setItem('dustContainerConfigV2', JSON.stringify(params));
+            localStorage.setItem('dustContainerConfigV3', JSON.stringify(params));
         }
 
         function loadState() {
-            const s = localStorage.getItem('dustContainerConfigV2');
+            const s = localStorage.getItem('dustContainerConfigV3');
             if (s) {
                 try {
                     const p = JSON.parse(s);
@@ -1240,6 +1274,7 @@
         function animate() {
             requestAnimationFrame(animate);
             controls.update();
+            updateCoGArrows();
             renderer.render(scene, camera);
         }
         
