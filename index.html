@@ -3,31 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dust Container Engineer - Ultimate V6</title>
+    <title>Dust Container Engineer - Ultimate V7</title>
     
     <style>
         :root {
-            /* Light Mode (Default) */
-            --bg-color: #c0c0c0;
-            --panel-bg: #f5f5f5;
+            --bg-color: #b0b0b0;
+            --panel-bg: #f4f4f4;
             --panel-border: #ccc;
             --text-main: #333;
-            --text-sec: #666;
             --accent: #007acc;
             --accent-hover: #005fa3;
+            --danger: #c0392b;
+            --success: #27ae60;
             --input-bg: #fff;
-            --log-bg: #1e1e1e;
-            --log-text: #00ff00;
             --header-bg: #e0e0e0;
         }
 
         [data-theme="dark"] {
-            /* Dark Mode */
-            --bg-color: #1a1a1a;
+            --bg-color: #1e1e1e;
             --panel-bg: #2d2d2d;
             --panel-border: #444;
             --text-main: #e0e0e0;
-            --text-sec: #aaa;
             --accent: #4dabf5;
             --accent-hover: #2196f3;
             --input-bg: #404040;
@@ -37,213 +33,114 @@
         * { box-sizing: border-box; user-select: none; }
 
         body { 
-            margin: 0; 
-            overflow: hidden; 
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-            background-color: var(--bg-color); 
-            color: var(--text-main); 
-            display: flex; 
-            height: 100vh; 
-            transition: background 0.3s, color 0.3s;
+            margin: 0; overflow: hidden; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: var(--bg-color); color: var(--text-main); 
+            display: flex; height: 100vh; 
         }
         
-        /* --- SIDEBAR --- */
+        /* SIDEBAR */
         #sidebar { 
-            width: 380px; 
-            background: var(--panel-bg); 
+            width: 380px; background: var(--panel-bg); 
             border-right: 1px solid var(--panel-border); 
-            display: flex; 
-            flex-direction: column; 
-            z-index: 100; 
-            box-shadow: 4px 0 15px rgba(0,0,0,0.2); 
-            flex-shrink: 0;
-            transition: background 0.3s;
+            display: flex; flex-direction: column; z-index: 100; 
+            box-shadow: 4px 0 15px rgba(0,0,0,0.2); flex-shrink: 0;
         }
 
         .panel-header { 
-            padding: 15px; 
-            background: var(--header-bg); 
+            padding: 15px; background: var(--header-bg); 
             border-bottom: 1px solid var(--panel-border); 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
+            display: flex; justify-content: space-between; align-items: center; 
         }
-        .panel-header h2 { margin: 0; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; }
+        .panel-header h2 { margin: 0; font-size: 15px; font-weight: 800; letter-spacing: 1px; }
         
-        .scroll-content { 
-            padding: 15px; 
-            flex-grow: 1; 
-            overflow-y: auto; 
-            scrollbar-width: thin;
-            scrollbar-color: var(--accent) var(--panel-bg);
-        }
+        .scroll-content { padding: 15px; flex-grow: 1; overflow-y: auto; }
 
-        /* --- CONTROLS --- */
+        /* CONTROLS */
         .control-group { margin-bottom: 20px; border-bottom: 1px solid var(--panel-border); padding-bottom: 15px; }
         .control-group h4 { 
-            margin: 0 0 12px 0; 
-            font-size: 12px; 
-            color: var(--accent); 
-            text-transform: uppercase; 
-            font-weight: 700; 
-            border-left: 4px solid var(--accent); 
-            padding-left: 8px; 
+            margin: 0 0 10px 0; font-size: 12px; color: var(--accent); 
+            text-transform: uppercase; border-left: 4px solid var(--accent); padding-left: 8px; 
         }
         
         .input-row { display: flex; align-items: center; margin-bottom: 8px; font-size: 13px; }
         .input-row label { flex: 1; font-weight: 500; }
         .input-row input[type="number"] { 
-            width: 70px; 
-            padding: 4px; 
-            background: var(--input-bg);
-            color: var(--text-main);
-            border: 1px solid var(--panel-border); 
-            border-radius: 4px; 
-            text-align: right;
+            width: 70px; padding: 4px; background: var(--input-bg); color: var(--text-main);
+            border: 1px solid var(--panel-border); border-radius: 4px; text-align: right;
         }
         .input-row input[type="range"] { flex: 1; margin: 0 10px; cursor: pointer; }
-        .input-row select { 
-            width: 100%; padding: 5px; 
-            background: var(--input-bg);
-            color: var(--text-main);
-            border-radius: 4px; border: 1px solid var(--panel-border); 
-        }
-        
-        /* --- BUTTONS --- */
+        .input-row select { width: 100%; padding: 5px; background: var(--input-bg); color: var(--text-main); border-radius: 4px; }
+
+        /* BUTTONS */
         .btn { 
             width: 100%; padding: 10px; margin-top: 5px; 
             background: var(--accent); color: white; border: none; 
-            border-radius: 4px; cursor: pointer; font-weight: 600; 
-            font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;
-            transition: all 0.2s;
+            border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 12px; 
+            text-transform: uppercase; transition: 0.2s;
         }
-        .btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
-        .btn:active { transform: translateY(0); }
+        .btn:hover { background: var(--accent-hover); }
         .btn-secondary { background: #7f8c8d; }
         .btn-secondary:hover { background: #607d8b; }
-        .btn-danger { background: #e74c3c; }
-        .btn-danger:hover { background: #c0392b; }
+        .btn-danger { background: var(--danger); }
+        .btn-danger:hover { background: #a93226; }
         
-        .theme-toggle { background: transparent; border: 1px solid var(--panel-border); color: var(--text-main); cursor: pointer; padding: 5px 10px; border-radius: 4px; font-size: 16px; }
-        .theme-toggle:hover { background: var(--input-bg); }
+        .icon-btn { background: transparent; border: 1px solid var(--panel-border); color: var(--text-main); cursor: pointer; padding: 5px 10px; border-radius: 4px; }
+        .icon-btn:hover { background: var(--input-bg); }
 
-        /* --- STATS & SIM BOX --- */
+        /* STATS */
         .stats-box { 
-            background: var(--input-bg); 
-            padding: 12px; 
-            border-radius: 6px; 
-            border: 1px solid var(--panel-border); 
-            font-size: 12px; 
-            margin-bottom: 20px; 
-            font-family: 'Consolas', monospace;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+            background: var(--input-bg); padding: 12px; border-radius: 6px; 
+            border: 1px solid var(--panel-border); font-size: 12px; margin-bottom: 20px; 
+            font-family: monospace; 
         }
         .stat-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
         .stat-val { font-weight: 700; color: var(--accent); }
-        .stat-divider { border-top: 1px solid var(--panel-border); margin: 8px 0; }
 
-        /* --- COLLAPSIBLE --- */
+        /* COLLAPSIBLE */
         .collapsible { 
-            background-color: var(--header-bg); 
-            color: var(--text-main); 
-            cursor: pointer; 
-            padding: 10px; 
-            width: 100%; 
-            border: none; 
-            text-align: left; 
-            outline: none; 
-            font-size: 13px; 
-            font-weight: 700;
-            border-radius: 4px;
-            margin-top: 8px;
-            display: flex;
-            justify-content: space-between;
-            transition: background 0.2s;
+            background-color: var(--header-bg); color: var(--text-main); 
+            cursor: pointer; padding: 10px; width: 100%; border: none; 
+            text-align: left; font-size: 13px; font-weight: 700; 
+            border-radius: 4px; margin-top: 8px; display: flex; justify-content: space-between;
         }
-        .collapsible:hover { background-color: var(--panel-border); }
-        .collapsible:after { content: '+'; }
-        .collapsible.active:after { content: '-'; }
         .content { 
-            padding: 0 10px; 
-            max-height: 0; 
-            overflow: hidden; 
-            transition: max-height 0.3s ease-out; 
-            background-color: var(--input-bg); 
-            border: 1px solid var(--header-bg);
-            border-top: none;
+            padding: 10px; display: none; background-color: var(--input-bg); 
+            border: 1px solid var(--header-bg); border-top: none; 
         }
+        .content.active { display: block; }
 
-        /* --- LAYER LIST --- */
+        /* LAYER LIST */
         #layer-list { 
-            border: 1px solid var(--panel-border); 
-            max-height: 150px; 
-            overflow-y: auto; 
-            background: var(--input-bg); 
-            border-radius: 4px;
-            margin-bottom: 8px;
+            border: 1px solid var(--panel-border); max-height: 150px; overflow-y: auto; 
+            background: var(--input-bg); border-radius: 4px; margin-bottom: 8px; 
         }
         .layer-item { 
-            padding: 6px 10px; 
-            border-bottom: 1px solid var(--panel-border); 
-            font-size: 12px; 
-            cursor: pointer; 
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between;
+            padding: 6px 10px; border-bottom: 1px solid var(--panel-border); 
+            font-size: 12px; cursor: pointer; display: flex; justify-content: space-between; 
         }
         .layer-item:hover { background: rgba(0,0,0,0.05); }
         .layer-item.selected { background: rgba(0, 122, 204, 0.2); border-left: 4px solid var(--accent); }
 
-        /* --- MAIN VIEW --- */
+        /* MAIN VIEW */
         #main-view { flex-grow: 1; position: relative; outline: none; }
         #overlay-controls { position: absolute; top: 20px; right: 20px; display: flex; gap: 10px; z-index: 10; }
         .overlay-btn { 
-            background: rgba(255,255,255,0.9); 
-            color: #000;
-            border: 1px solid #999; 
-            padding: 8px 12px; 
-            cursor: pointer; 
-            font-size: 12px; 
-            border-radius: 4px; 
-            font-weight: 600;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: rgba(255,255,255,0.9); color: #000; border: 1px solid #999; 
+            padding: 8px 12px; cursor: pointer; font-size: 12px; border-radius: 4px; font-weight: 600; 
         }
 
-        /* --- LOG PANEL --- */
+        /* LOG */
         #log-panel { 
-            position: absolute; 
-            bottom: 0; 
-            left: 380px; 
-            right: 0; 
-            background: var(--log-bg); 
-            color: var(--log-text); 
-            font-family: 'Consolas', monospace; 
-            font-size: 12px; 
-            z-index: 50; 
-            display: flex; 
-            flex-direction: column; 
-            border-top: 2px solid var(--accent);
+            position: absolute; bottom: 0; left: 380px; right: 0; 
+            background: #1e1e1e; color: #00ff00; font-family: monospace; font-size: 12px; 
+            z-index: 50; display: flex; flex-direction: column; border-top: 2px solid var(--accent); 
         }
-        .log-header { 
-            padding: 6px 15px; 
-            background: #333; 
-            color: #fff;
-            cursor: pointer; 
-            display: flex; 
-            justify-content: space-between; 
-            font-weight: bold;
-        }
-        .log-content { 
-            height: 30px; 
-            overflow-y: auto; 
-            padding: 8px 15px; 
-            white-space: pre-wrap; 
-            transition: height 0.3s;
-        }
+        .log-header { padding: 6px 15px; background: #333; color: #fff; cursor: pointer; font-weight: bold; }
+        .log-content { height: 30px; overflow-y: auto; padding: 8px 15px; white-space: pre-wrap; transition: height 0.3s; }
         .log-expanded .log-content { height: 180px; }
     </style>
 
-    <!-- Three.js Imports -->
     <script type="importmap">
         {
             "imports": {
@@ -255,38 +152,34 @@
 </head>
 <body data-theme="light">
 
-    <!-- SIDEBAR -->
     <div id="sidebar">
         <div class="panel-header">
-            <h2>Dust Engineer V6</h2>
+            <h2>Dust Engineer V7</h2>
             <div style="display:flex; gap:5px;">
-                <button class="theme-toggle" id="btn-theme" title="Toggle Dark Mode">◑</button>
-                <button class="btn-secondary" id="btn-undo" style="width:30px; padding:5px;" title="Undo">↶</button>
-                <button class="btn-secondary" id="btn-redo" style="width:30px; padding:5px;" title="Redo">↷</button>
+                <button class="icon-btn" id="btn-theme" title="Toggle Dark Mode">◑</button>
+                <button class="icon-btn" id="btn-undo" title="Undo">↶</button>
+                <button class="icon-btn" id="btn-redo" title="Redo">↷</button>
             </div>
         </div>
         
         <div class="scroll-content">
             
-            <!-- PHYSICS STATS -->
+            <!-- STATS -->
             <div class="stats-box">
                 <div class="stat-row"><span>Vol (Internal):</span><span class="stat-val" id="val-vol-int">0.000 m³</span></div>
                 <div class="stat-row"><span>Vol (Fill):</span><span class="stat-val" id="val-vol-fill">0.000 m³</span></div>
                 <div class="stat-divider"></div>
                 <div class="stat-row"><span>Mass (Shell):</span><span class="stat-val" id="val-mass-shell">0.0 kg</span></div>
                 <div class="stat-row"><span>Mass (Dust):</span><span class="stat-val" id="val-mass-dust">0.0 kg</span></div>
-                <div class="stat-row" style="font-size:13px;"><span>Mass (Total):</span><span class="stat-val" id="val-mass-total">0.0 kg</span></div>
+                <div class="stat-row"><span>Mass (Total):</span><span class="stat-val" id="val-mass-total">0.0 kg</span></div>
                 <div class="stat-divider"></div>
                 <div class="stat-row"><span>CoG (Empty):</span><span class="stat-val" id="val-cog-empty">-</span></div>
                 <div class="stat-row"><span>CoG (Filled):</span><span class="stat-val" id="val-cog-filled">-</span></div>
-                <div class="stat-row" id="collision-alert" style="color:var(--danger); display:none; margin-top:5px;">
-                    <span>⚠ Collision:</span><span class="stat-val" id="val-col-vol">0 L</span>
-                </div>
             </div>
 
-            <!-- CONTAINER GEOMETRY -->
+            <!-- GEOMETRY -->
             <div class="control-group">
-                <h4>Geometry & Frame</h4>
+                <h4>Container Geometry</h4>
                 <div class="input-row"><label>Length (Rect)</label><input type="range" id="inp-L" min="800" max="3000" step="10"><input type="number" id="num-L"></div>
                 <div class="input-row"><label>Width</label><input type="range" id="inp-W" min="800" max="2500" step="10"><input type="number" id="num-W"></div>
                 <div class="input-row"><label>Height</label><input type="range" id="inp-H" min="500" max="2000" step="10"><input type="number" id="num-H"></div>
@@ -304,82 +197,86 @@
                 </div>
             </div>
 
-            <!-- SIMULATION & FILL -->
-            <button class="collapsible active">Simulation & Material</button>
-            <div class="content" style="max-height: 500px;">
-                <div class="input-row" style="margin-top:10px;">
-                    <label>Fill Level (%)</label>
-                    <input type="range" id="inp-Fill" min="0" max="100" value="80">
-                    <span id="lbl-Fill" style="font-weight:bold; width:35px; text-align:right;">80%</span>
+            <!-- SIMULATION -->
+            <button class="collapsible active">Simulation & Faucet</button>
+            <div class="content active">
+                <div class="input-row" style="margin-top:5px;">
+                    <label style="color:var(--accent); font-weight:bold;">Enable Faucet</label>
+                    <input type="checkbox" id="chk-sim-mode">
                 </div>
-                <div class="input-row">
-                    <label>Shell Material</label>
-                    <select id="sel-mat">
-                        <option value="7850">Steel (7850 kg/m³)</option>
-                        <option value="2700">Aluminum (2700 kg/m³)</option>
-                        <option value="custom">Custom</option>
-                    </select>
-                </div>
-                <div class="input-row">
-                    <label>Dust Density</label>
-                    <input type="number" id="num-RhoDust" value="1850">
+                <div id="sim-controls" style="display:none; padding:5px; background:rgba(0,0,0,0.05); border-radius:4px;">
+                    <div class="input-row"><label>Sim Mode</label>
+                        <select id="sel-sim-type">
+                            <option value="simple">Simple (Visual)</option>
+                            <option value="accumulate">Accumulation (Piling)</option>
+                        </select>
+                    </div>
+                    <div class="input-row"><label>Flow Rate</label><input type="range" id="inp-flow" min="1" max="50" value="10"></div>
+                    <div style="display:flex; gap:5px; margin-bottom:5px;">
+                        <button class="btn" id="btn-sim-start">Start Flow</button>
+                        <button class="btn-secondary" id="btn-sim-stop">Stop Flow</button>
+                    </div>
+                    <button class="btn-danger" id="btn-sim-clear">Clear Particles</button>
+                    <div style="font-size:10px; color:var(--text-sec); margin-top:5px;">
+                        <i>Select Faucet in list to move with WASD.</i>
+                    </div>
                 </div>
                 
-                <!-- Advanced Sim Controls -->
-                <div style="margin-top:15px; border-top:1px solid var(--panel-border); padding-top:10px;">
-                    <div class="input-row">
-                        <label style="color:var(--accent); font-weight:bold;">Advanced Sim Mode</label>
-                        <input type="checkbox" id="chk-sim-mode">
-                    </div>
-                    <div id="sim-controls" style="display:none; background: rgba(0,0,0,0.03); padding:10px; border-radius:4px;">
-                        <div class="input-row"><label>Flow Rate</label><input type="range" id="inp-flow" min="1" max="50" value="10"></div>
-                        <div style="display:flex; gap:5px; margin-bottom:5px;">
-                            <button class="btn" id="btn-sim-start">Start</button>
-                            <button class="btn-secondary" id="btn-sim-stop">Stop</button>
-                        </div>
-                        <button class="btn-danger" id="btn-sim-clear">Clear Particles</button>
-                        <div style="font-size:10px; color:var(--text-sec); margin-top:5px;">
-                            WASD moves Faucet when Sim Mode is active.
-                        </div>
-                    </div>
+                <div class="input-row" style="margin-top:10px; border-top:1px solid var(--panel-border); padding-top:5px;">
+                    <label>Static Fill %</label>
+                    <input type="range" id="inp-Fill" min="0" max="100" value="80">
+                    <span id="lbl-Fill">80%</span>
                 </div>
             </div>
 
-            <!-- SCENE OBJECTS -->
-            <button class="collapsible">Scene Objects</button>
+            <!-- OBJECTS & TRANSFORM -->
+            <button class="collapsible">Objects & Transform</button>
             <div class="content">
-                <div id="layer-list" style="margin-top:10px;"></div>
-                <div style="display:flex; gap:5px;">
+                <div id="layer-list"></div>
+                <div style="display:flex; gap:5px; margin-bottom:10px;">
                     <button class="btn" id="btn-import">Import STL</button>
                     <input type="file" id="file-input" accept=".stl" style="display: none;">
                 </div>
-                <div style="font-size:11px; color:var(--text-sec); margin-top:5px; text-align:center;">
-                    Controls: <b>W A S D</b> (Camera Relative)<br>
-                    <b>Click</b> object to select.
+                
+                <div class="control-group" style="border:none; margin:0;">
+                    <h4>Selected Transform</h4>
+                    <div style="display:flex; gap:5px;">
+                        <button class="btn-secondary" onclick="rotateSelected('x')">Rot X</button>
+                        <button class="btn-secondary" onclick="rotateSelected('y')">Rot Y</button>
+                        <button class="btn-secondary" onclick="rotateSelected('z')">Rot Z</button>
+                    </div>
+                    <div style="font-size:10px; margin-top:5px;">WASD moves selected object relative to camera.</div>
                 </div>
             </div>
 
-            <!-- LID -->
-            <button class="collapsible">Lid</button>
+            <!-- LID & MAT -->
+            <button class="collapsible">Lid & Material</button>
             <div class="content">
-                <div class="input-row" style="margin-top:10px;"><label>Include Lid</label><input type="checkbox" id="chk-lid"></div>
+                <div class="input-row"><label>Include Lid</label><input type="checkbox" id="chk-lid"></div>
                 <div class="input-row"><label>Thickness</label><input type="number" id="num-TLid" value="3"></div>
                 <div class="input-row"><label>Hole Radius</label><input type="number" id="num-RHole" value="150"></div>
                 <div class="input-row"><label>Offset</label><input type="number" id="num-LidOffset" value="300"></div>
+                <div class="input-row" style="margin-top:10px;"><label>Material</label>
+                    <select id="sel-mat">
+                        <option value="7850">Steel</option>
+                        <option value="2700">Aluminum</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                </div>
+                <div class="input-row"><label>Dust Density</label><input type="number" id="num-RhoDust" value="1850"></div>
             </div>
 
-            <!-- VIEW SETTINGS -->
-            <button class="collapsible">View & Settings</button>
+            <!-- SETTINGS -->
+            <button class="collapsible">View Settings</button>
             <div class="content">
-                <div class="input-row" style="margin-top:10px;"><label>Move Step (mm)</label><input type="number" id="num-Step" value="50"></div>
-                <div class="input-row"><label>Snap to Grid</label><input type="checkbox" id="chk-snap" checked></div>
-                <div class="input-row"><label>Ref Cube (1m³)</label><input type="checkbox" id="chk-ref"></div>
-                <div class="input-row"><label>Show CoG (E)</label><input type="checkbox" id="chk-cog-e"></div>
-                <div class="input-row"><label>Show CoG (F)</label><input type="checkbox" id="chk-cog-f" checked></div>
+                <div class="input-row"><label>Move Step</label><input type="number" id="num-Step" value="50"></div>
+                <div class="input-row"><label>Snap Grid</label><input type="checkbox" id="chk-snap" checked></div>
+                <div class="input-row"><label>Ref Cube</label><input type="checkbox" id="chk-ref"></div>
+                <div class="input-row"><label>CoG (Empty)</label><input type="checkbox" id="chk-cog-e"></div>
+                <div class="input-row"><label>CoG (Filled)</label><input type="checkbox" id="chk-cog-f" checked></div>
                 <div class="input-row"><label>Collisions</label><input type="checkbox" id="chk-col" checked></div>
             </div>
 
-            <!-- ACTIONS -->
             <div class="control-group" style="margin-top: 20px; border: none;">
                 <button class="btn" id="btn-export-stl">Export Container</button>
                 <div style="display:flex; gap:5px;">
@@ -387,38 +284,29 @@
                     <button class="btn-danger" id="btn-reset">Reset</button>
                 </div>
             </div>
-
         </div>
     </div>
 
-    <!-- MAIN VIEW -->
     <div id="main-view" tabindex="0">
         <div id="overlay-controls">
-            <button class="overlay-btn" id="btn-reset-view">Reset View (Iso)</button>
+            <button class="overlay-btn" id="btn-reset-view">Reset View</button>
         </div>
     </div>
 
-    <!-- LOG -->
     <div id="log-panel">
-        <div class="log-header" id="log-header">
-            <span>System Log</span>
-            <span>▲</span>
+        <div class="log-header" onclick="document.getElementById('log-panel').classList.toggle('log-expanded')">
+            <span>System Log</span><span>▲</span>
         </div>
-        <div class="log-content" id="log-content">System Initialized. V6 Engine Ready.</div>
+        <div class="log-content" id="log-content">System Ready.</div>
     </div>
 
-    <!-- LOGIC -->
     <script type="module">
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         import { STLLoader } from 'three/addons/loaders/STLLoader.js';
         import { STLExporter } from 'three/addons/exporters/STLExporter.js';
 
-        // --- CONSTANTS ---
-        const GRAVITY = -9820; // mm/s^2 approx
-        const SIM_HEIGHT = 1600;
-
-        // --- STATE & PARAMS ---
+        // --- CONFIG ---
         const DEFAULTS = {
             L: 1400, W: 1300, H: 900, x_hopper: 700, t_wall: 5,
             frame_h: 100, frame_pocket_w: 230, frame_pocket_h: 91, frame_pocket_s: 142,
@@ -428,37 +316,26 @@
             move_step: 50, snap: true, show_collisions: true,
             show_cog_e: false, show_cog_f: true
         };
-
         let params = { ...DEFAULTS };
-        
-        // Input State (WASD)
         const keys = { w: false, a: false, s: false, d: false };
 
-        // Scene Globals
+        // --- GLOBALS ---
         let scene, camera, renderer, controls, gridHelper;
-        let containerGroup, lidMesh, dustMesh, frameGroup;
+        let containerGroup, lidMesh, dustMesh, frameGroup, faucetMesh;
         let importedObjects = [];
         let collisionBoxes = [];
         let selectedObject = null;
         let refCube, cogArrowEmpty, cogArrowFilled;
         
-        // Simulation Globals
+        // Simulation
         let simMode = false;
         let isSimulating = false;
-        let faucetMesh;
         let particles = [];
-        let particleGeo, particleMat, particleSystem;
+        let particleSystem;
         let simFlowRate = 10;
         let lastTime = 0;
-
-        // CoG Calculation Storage
-        let localCoG_E = new THREE.Vector3();
-        let localCoG_F = new THREE.Vector3();
-
-        // History
-        let historyStack = [];
-        let historyIndex = -1;
-        let isUndoRedo = false;
+        let heightMap = []; // For accumulation
+        const GRID_RES = 40; // Resolution of accumulation grid
 
         // --- INIT ---
         function init() {
@@ -467,15 +344,14 @@
             setupUI();
             rebuildContainer();
             initSimulation();
-            pushHistory();
             requestAnimationFrame(animate);
-            log("Dust Container V6 Loaded.");
+            log("V7 Engine Started.");
         }
 
         function initThree() {
             const container = document.getElementById('main-view');
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0xc0c0c0);
+            scene.background = new THREE.Color(0xb0b0b0);
 
             const aspect = container.clientWidth / container.clientHeight;
             camera = new THREE.OrthographicCamera(-3000*aspect, 3000*aspect, 3000, -3000, -10000, 10000);
@@ -490,44 +366,418 @@
 
             controls = new OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
-            controls.dampingFactor = 0.1;
 
-            // Lights
-            const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+            const ambient = new THREE.AmbientLight(0xffffff, 0.6);
             scene.add(ambient);
             const sun = new THREE.DirectionalLight(0xffffff, 0.8);
             sun.position.set(2000, 4000, 2000);
             sun.castShadow = true;
-            sun.shadow.mapSize.width = 2048;
-            sun.shadow.mapSize.height = 2048;
+            sun.shadow.mapSize.width = 2048; sun.shadow.mapSize.height = 2048;
             sun.shadow.camera.left = -3000; sun.shadow.camera.right = 3000;
             sun.shadow.camera.top = 3000; sun.shadow.camera.bottom = -3000;
             scene.add(sun);
 
-            gridHelper = new THREE.GridHelper(10000, 100, 0x666666, 0x999999);
+            gridHelper = new THREE.GridHelper(10000, 100, 0x555555, 0x888888);
             scene.add(gridHelper);
 
-            // Reference Cube (1m)
-            refCube = new THREE.Mesh(
-                new THREE.BoxGeometry(1000, 1000, 1000),
-                new THREE.MeshBasicMaterial({ color: 0xe74c3c, wireframe: true, opacity: 0.5, transparent: true })
-            );
-            refCube.position.set(2500, 500, 2500);
-            refCube.visible = false;
-            scene.add(refCube);
+            refCube = new THREE.Mesh(new THREE.BoxGeometry(1000,1000,1000), new THREE.MeshBasicMaterial({color:0xe74c3c, wireframe:true}));
+            refCube.position.set(2500,500,2500); refCube.visible = false; scene.add(refCube);
 
-            // CoG Arrows
-            const headLen = 200, headW = 100;
-            cogArrowEmpty = new THREE.ArrowHelper(new THREE.Vector3(0,-1,0), new THREE.Vector3(), 800, 0x0000ff, headLen, headW);
-            cogArrowFilled = new THREE.ArrowHelper(new THREE.Vector3(0,-1,0), new THREE.Vector3(), 800, 0xff0000, headLen, headW);
-            scene.add(cogArrowEmpty);
-            scene.add(cogArrowFilled);
+            cogArrowEmpty = new THREE.ArrowHelper(new THREE.Vector3(0,-1,0), new THREE.Vector3(), 800, 0x0000ff, 200, 100);
+            cogArrowFilled = new THREE.ArrowHelper(new THREE.Vector3(0,-1,0), new THREE.Vector3(), 800, 0xff0000, 200, 100);
+            scene.add(cogArrowEmpty); scene.add(cogArrowFilled);
 
-            // Listeners
             window.addEventListener('resize', onWindowResize);
-            document.addEventListener('keydown', e => handleKey(e, true));
-            document.addEventListener('keyup', e => handleKey(e, false));
+            document.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+            document.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
             renderer.domElement.addEventListener('mousedown', onMouseClick);
+        }
+
+        // --- GEOMETRY ---
+        function rebuildContainer() {
+            if(containerGroup) scene.remove(containerGroup);
+            containerGroup = new THREE.Group();
+            containerGroup.name = "Container";
+
+            const matShell = new THREE.MeshStandardMaterial({ color: 0x465c69, roughness: 0.6, side: THREE.DoubleSide });
+            const matFrame = new THREE.MeshStandardMaterial({ color: 0x2e7d32, roughness: 0.7 });
+            const matLid = new THREE.MeshStandardMaterial({ color: 0x7f8c8d, roughness: 0.5 });
+            const matDust = new THREE.MeshBasicMaterial({ color: 0x795548, transparent: true, opacity: 0.8 });
+
+            const { L, W, H, x_hopper, t_wall, include_frame, frame_h, fill_percent } = params;
+            const y_start = include_frame ? frame_h : 0;
+
+            // 1. Shell (Stitched: Rect + Overhang Wedge)
+            const shape = new THREE.Shape();
+            shape.moveTo(0,0); shape.lineTo(L,0); shape.lineTo(L,H);
+            shape.lineTo(-x_hopper, H); shape.lineTo(0,0);
+
+            const wallGeo = new THREE.ExtrudeGeometry(shape, { depth: t_wall, bevelEnabled: false });
+            const w1 = new THREE.Mesh(wallGeo, matShell); w1.position.set(0, y_start, W/2 - t_wall);
+            const w2 = new THREE.Mesh(wallGeo, matShell); w2.position.set(0, y_start, -W/2);
+            w1.castShadow = true; w2.castShadow = true;
+            containerGroup.add(w1, w2);
+
+            const floor = new THREE.Mesh(new THREE.BoxGeometry(L, t_wall, W - 2*t_wall), matShell);
+            floor.position.set(L/2, y_start + t_wall/2, 0); floor.castShadow = true;
+            containerGroup.add(floor);
+
+            const back = new THREE.Mesh(new THREE.BoxGeometry(t_wall, H, W - 2*t_wall), matShell);
+            back.position.set(L - t_wall/2, y_start + H/2, 0); back.castShadow = true;
+            containerGroup.add(back);
+
+            const slantL = Math.sqrt(x_hopper**2 + H**2);
+            const ang = Math.atan2(H, x_hopper);
+            const slant = new THREE.Mesh(new THREE.BoxGeometry(slantL, W - 2*t_wall, t_wall), matShell);
+            slant.rotation.x = Math.PI/2; slant.rotation.y = -ang;
+            slant.position.set(-x_hopper/2, y_start + H/2, 0); slant.castShadow = true;
+            containerGroup.add(slant);
+
+            // 2. Frame
+            if(include_frame) {
+                frameGroup = new THREE.Group();
+                const fw = params.frame_pocket_w, fs = params.frame_pocket_s;
+                const margin = (W - (2*fw + fs))/2;
+                
+                const sideGeo = new THREE.BoxGeometry(L, frame_h, margin);
+                const centerGeo = new THREE.BoxGeometry(L, frame_h, fs);
+                
+                const fL = new THREE.Mesh(sideGeo, matFrame); fL.position.set(L/2, frame_h/2, W/2 - margin/2);
+                const fR = new THREE.Mesh(sideGeo, matFrame); fR.position.set(L/2, frame_h/2, -W/2 + margin/2);
+                const fC = new THREE.Mesh(centerGeo, matFrame); fC.position.set(L/2, frame_h/2, 0);
+                
+                const pGeo = new THREE.BoxGeometry(L, 5, W);
+                const pTop = new THREE.Mesh(pGeo, matFrame); pTop.position.set(L/2, frame_h - 2.5, 0);
+                const pBot = new THREE.Mesh(pGeo, matFrame); pBot.position.set(L/2, 2.5, 0);
+                
+                frameGroup.add(fL, fR, fC, pTop, pBot);
+                frameGroup.children.forEach(c => c.castShadow = true);
+                containerGroup.add(frameGroup);
+            }
+
+            // 3. Lid
+            if(params.include_lid) {
+                const ls = new THREE.Shape();
+                ls.moveTo(-x_hopper, -W/2); ls.lineTo(L, -W/2);
+                ls.lineTo(L, W/2); ls.lineTo(-x_hopper, W/2); ls.lineTo(-x_hopper, -W/2);
+                const hole = new THREE.Path();
+                hole.absarc(-x_hopper + params.lid_offset, 0, params.r_hole, 0, Math.PI*2);
+                ls.holes.push(hole);
+                const lid = new THREE.Mesh(new THREE.ExtrudeGeometry(ls, {depth: params.t_lid, bevelEnabled: false}), matLid);
+                lid.rotation.x = Math.PI/2; lid.position.set(0, y_start + H + params.t_lid, 0);
+                lid.castShadow = true; containerGroup.add(lid);
+            }
+
+            // 4. Dust Fill
+            if(fill_percent > 0) {
+                const fillH = H * (fill_percent/100);
+                const fillX = (fillH / H) * x_hopper;
+                const ds = new THREE.Shape();
+                ds.moveTo(0,0); ds.lineTo(L - t_wall, 0); ds.lineTo(L - t_wall, fillH); ds.lineTo(-fillX, fillH); ds.lineTo(0,0);
+                const dMesh = new THREE.Mesh(new THREE.ExtrudeGeometry(ds, { depth: W - 2*t_wall, bevelEnabled:false }), matDust);
+                dMesh.position.set(0, y_start + t_wall, -(W - 2*t_wall)/2);
+                dMesh.position.z = - (W/2 - t_wall); 
+                containerGroup.add(dMesh);
+            }
+
+            scene.add(containerGroup);
+            if(!selectedObject || (selectedObject.parent !== scene && selectedObject !== containerGroup && selectedObject !== faucetMesh)) {
+                selectedObject = containerGroup;
+            }
+            calculatePhysics();
+            updateLayerList();
+        }
+
+        function calculatePhysics() {
+            const { L, W, H, x_hopper, t_wall, fill_percent, frame_h, include_frame } = params;
+            const s = 0.001;
+            const v_rect = (L-2*t_wall)*(W-2*t_wall)*(H-t_wall)*s**3;
+            const v_tri = 0.5*x_hopper*(H-t_wall)*(W-2*t_wall)*s**3;
+            const v_total = v_rect + v_tri;
+            const v_fill = v_total * (fill_percent/100);
+            
+            const m_shell = ((L*W*H + 0.5*x_hopper*H*W)*s**3 - v_total) * params.rho_shell + (include_frame ? (L*W*frame_h*s**3*0.3)*params.rho_shell : 0);
+            const m_dust = v_fill * params.rho_dust;
+            
+            const cogY = (include_frame ? frame_h : 0) + H/3;
+            const cogX = L/2 - x_hopper/5;
+
+            document.getElementById('val-vol-int').innerText = v_total.toFixed(3) + " m³";
+            document.getElementById('val-vol-fill').innerText = v_fill.toFixed(3) + " m³";
+            document.getElementById('val-mass-shell').innerText = m_shell.toFixed(1) + " kg";
+            document.getElementById('val-mass-dust').innerText = m_dust.toFixed(1) + " kg";
+            document.getElementById('val-mass-total').innerText = (m_shell + m_dust).toFixed(1) + " kg";
+            
+            if(containerGroup) {
+                cogArrowEmpty.visible = params.show_cog_e;
+                cogArrowFilled.visible = params.show_cog_f;
+                const pos = containerGroup.position.clone();
+                cogArrowEmpty.position.set(pos.x + cogX, pos.y + cogY, pos.z);
+                cogArrowFilled.position.set(pos.x + cogX, pos.y + cogY + (H*fill_percent/200), pos.z);
+            }
+        }
+
+        // --- SIMULATION ---
+        function initSimulation() {
+            faucetMesh = new THREE.Group();
+            const cone = new THREE.Mesh(new THREE.ConeGeometry(80, 150, 16, 1, true), new THREE.MeshStandardMaterial({color:0xffaa00, side:THREE.DoubleSide}));
+            cone.rotation.x = Math.PI;
+            faucetMesh.add(cone);
+            faucetMesh.position.set(0, 1600, 0);
+            faucetMesh.visible = false;
+            faucetMesh.name = "Faucet";
+            scene.add(faucetMesh);
+
+            const pCount = 2000;
+            particleSystem = new THREE.InstancedMesh(new THREE.DodecahedronGeometry(15), new THREE.MeshLambertMaterial({color:0x8d6e63}), pCount);
+            particleSystem.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+            scene.add(particleSystem);
+            
+            const dummy = new THREE.Object3D();
+            dummy.position.set(0,-99999,0); dummy.updateMatrix();
+            for(let i=0; i<pCount; i++) {
+                particleSystem.setMatrixAt(i, dummy.matrix);
+                particles.push({ active:false, pos:new THREE.Vector3(), vel:new THREE.Vector3() });
+            }
+            particleSystem.instanceMatrix.needsUpdate = true;
+            
+            // Init Height Map
+            heightMap = new Float32Array(GRID_RES * GRID_RES).fill(0);
+        }
+
+        function updateSimulation(dt) {
+            if(!isSimulating) return;
+            const type = document.getElementById('sel-sim-type').value;
+            const spawnRate = Math.ceil(simFlowRate * dt * 3);
+            let spawned = 0;
+            const dummy = new THREE.Object3D();
+            const worldPos = new THREE.Vector3();
+            faucetMesh.getWorldPosition(worldPos);
+
+            // Spawn
+            for(let i=0; i<particles.length; i++) {
+                if(spawned >= spawnRate) break;
+                if(!particles[i].active) {
+                    particles[i].active = true;
+                    particles[i].pos.set(worldPos.x + (Math.random()-0.5)*40, worldPos.y - 80, worldPos.z + (Math.random()-0.5)*40);
+                    particles[i].vel.set(0,0,0);
+                    spawned++;
+                }
+            }
+
+            // Physics
+            const bounds = new THREE.Box3().setFromObject(containerGroup);
+            const floorY = params.include_frame ? params.frame_h : 0;
+            
+            for(let i=0; i<particles.length; i++) {
+                if(particles[i].active) {
+                    let p = particles[i];
+                    p.vel.y += -9820 * dt;
+                    p.pos.addScaledVector(p.vel, dt);
+
+                    let stopY = 0;
+                    // Check if inside container X/Z
+                    if(p.pos.x > bounds.min.x && p.pos.x < bounds.max.x && p.pos.z > bounds.min.z && p.pos.z < bounds.max.z) {
+                        stopY = floorY + params.t_wall;
+                        if(type === 'accumulate') {
+                            // Map to grid
+                            const gx = Math.floor(((p.pos.x - bounds.min.x) / (bounds.max.x - bounds.min.x)) * GRID_RES);
+                            const gz = Math.floor(((p.pos.z - bounds.min.z) / (bounds.max.z - bounds.min.z)) * GRID_RES);
+                            if(gx>=0 && gx<GRID_RES && gz>=0 && gz<GRID_RES) {
+                                stopY += heightMap[gz * GRID_RES + gx];
+                            }
+                        }
+                    }
+
+                    if(p.pos.y <= stopY) {
+                        p.pos.y = stopY;
+                        p.active = false; // Stop moving
+                        if(type === 'accumulate' && stopY > 0) {
+                            // Add to height map
+                            const gx = Math.floor(((p.pos.x - bounds.min.x) / (bounds.max.x - bounds.min.x)) * GRID_RES);
+                            const gz = Math.floor(((p.pos.z - bounds.min.z) / (bounds.max.z - bounds.min.z)) * GRID_RES);
+                            if(gx>=0 && gx<GRID_RES && gz>=0 && gz<GRID_RES) {
+                                heightMap[gz * GRID_RES + gx] += 15; // particle size
+                            }
+                        }
+                    }
+                    
+                    dummy.position.copy(p.pos);
+                    dummy.updateMatrix();
+                    particleSystem.setMatrixAt(i, dummy.matrix);
+                }
+            }
+            particleSystem.instanceMatrix.needsUpdate = true;
+        }
+
+        // --- INPUT & MOVEMENT ---
+        function updateMovement() {
+            if(!selectedObject) return;
+            const step = params.move_step * 0.1;
+            const camDir = new THREE.Vector3();
+            camera.getWorldDirection(camDir);
+            camDir.y = 0; camDir.normalize();
+
+            // Robust Camera Relative Vectors
+            let fwd = new THREE.Vector3(0,0,-1);
+            if(Math.abs(camDir.x) > Math.abs(camDir.z)) fwd.set(Math.sign(camDir.x), 0, 0);
+            else fwd.set(0, 0, Math.sign(camDir.z));
+            
+            const right = new THREE.Vector3().crossVectors(new THREE.Vector3(0,1,0), fwd).normalize();
+            const move = new THREE.Vector3();
+
+            if(keys.w) move.add(fwd);
+            if(keys.s) move.sub(fwd);
+            if(keys.a) move.add(right);
+            if(keys.d) move.sub(right);
+
+            if(move.lengthSq() > 0) {
+                move.normalize().multiplyScalar(params.move_step);
+                selectedObject.position.x += move.x * 0.1;
+                selectedObject.position.z += move.z * 0.1;
+                
+                if(params.snap) {
+                    // Soft snap visual
+                    // selectedObject.position.x = Math.round(selectedObject.position.x / 50) * 50;
+                }
+                checkCollisions();
+            }
+        }
+
+        function onMouseClick(e) {
+            const rect = renderer.domElement.getBoundingClientRect();
+            const m = new THREE.Vector2(((e.clientX - rect.left)/rect.width)*2 - 1, -((e.clientY - rect.top)/rect.height)*2 + 1);
+            const ray = new THREE.Raycaster();
+            ray.setFromCamera(m, camera);
+            const hits = ray.intersectObjects(scene.children, true);
+            if(hits.length > 0) {
+                let obj = hits[0].object;
+                while(obj.parent && obj.parent !== scene) obj = obj.parent;
+                if(obj !== gridHelper && obj !== refCube && !obj.isArrow && obj !== particleSystem) {
+                    selectedObject = obj;
+                    log("Selected: " + (obj.name || "Object"));
+                    updateLayerList();
+                }
+            }
+        }
+
+        window.rotateSelected = (axis) => {
+            if(!selectedObject) return;
+            selectedObject.rotation[axis] += Math.PI/2;
+            // Re-ground if it's an imported object
+            if(importedObjects.includes(selectedObject)) groundObject(selectedObject);
+            checkCollisions();
+        };
+
+        function groundObject(mesh) {
+            const box = new THREE.Box3().setFromObject(mesh);
+            const yMin = box.min.y;
+            mesh.position.y -= yMin; // Shift down/up to 0
+        }
+
+        function checkCollisions() {
+            collisionBoxes.forEach(b => scene.remove(b));
+            collisionBoxes = [];
+            document.getElementById('collision-alert').style.display = 'none';
+            if(!containerGroup) return;
+            const b1 = new THREE.Box3().setFromObject(containerGroup);
+            importedObjects.forEach(obj => {
+                const b2 = new THREE.Box3().setFromObject(obj);
+                if(b1.intersectsBox(b2)) {
+                    const i = b1.clone().intersect(b2);
+                    const vol = (i.max.x-i.min.x)*(i.max.y-i.min.y)*(i.max.z-i.min.z)/1e6;
+                    if(params.show_collisions) {
+                        const m = new THREE.Mesh(new THREE.BoxGeometry(i.max.x-i.min.x, i.max.y-i.min.y, i.max.z-i.min.z), new THREE.MeshBasicMaterial({color:0xff0000, transparent:true, opacity:0.5}));
+                        m.position.copy(i.min).add(new THREE.Vector3((i.max.x-i.min.x)/2, (i.max.y-i.min.y)/2, (i.max.z-i.min.z)/2));
+                        scene.add(m); collisionBoxes.push(m);
+                        document.getElementById('val-col-vol').innerText = vol.toFixed(2) + " L";
+                        document.getElementById('collision-alert').style.display = 'flex';
+                    }
+                }
+            });
+        }
+
+        // --- UI BINDING ---
+        function setupUI() {
+            const bind = (id, k, fn) => {
+                const el = document.getElementById(id);
+                if(el) el.addEventListener('input', e => {
+                    params[k] = (el.type==='checkbox') ? el.checked : parseFloat(el.value);
+                    if(document.getElementById('num-'+k.split('_')[1])) document.getElementById('num-'+k.split('_')[1]).value = params[k];
+                    if(fn) fn();
+                });
+            };
+            ['L','W','H','XHop','Thick'].forEach(x => {
+                const k = (x==='XHop')?'x_hopper':(x==='Thick'?'t_wall':x);
+                bind('inp-'+x, k, rebuildContainer);
+            });
+            
+            document.getElementById('chk-frame').onchange = e => { params.include_frame = e.target.checked; document.getElementById('frame-controls').style.display = e.target.checked?'block':'none'; rebuildContainer(); };
+            document.getElementById('chk-lid').onchange = e => { params.include_lid = e.target.checked; rebuildContainer(); };
+            document.getElementById('inp-Fill').oninput = e => { params.fill_percent = parseFloat(e.target.value); document.getElementById('lbl-Fill').innerText = params.fill_percent+"%"; rebuildContainer(); };
+            
+            document.getElementById('chk-sim-mode').onchange = e => {
+                simMode = e.target.checked;
+                faucetMesh.visible = simMode;
+                document.getElementById('sim-controls').style.display = simMode ? 'block' : 'none';
+                if(simMode) { selectedObject = faucetMesh; log("Sim Mode: Faucet Selected"); }
+                else { selectedObject = containerGroup; }
+                updateLayerList();
+            };
+            document.getElementById('btn-sim-start').onclick = () => isSimulating = true;
+            document.getElementById('btn-sim-stop').onclick = () => isSimulating = false;
+            document.getElementById('btn-sim-clear').onclick = () => {
+                particles.forEach(p => { p.active = false; p.pos.set(0,-99999,0); });
+                heightMap.fill(0);
+                isSimulating = false;
+                particleSystem.instanceMatrix.needsUpdate = true;
+            };
+            document.getElementById('inp-flow').oninput = e => simFlowRate = parseFloat(e.target.value);
+
+            document.getElementById('btn-theme').onclick = () => {
+                const b = document.body;
+                b.setAttribute('data-theme', b.getAttribute('data-theme')==='light'?'dark':'light');
+                scene.background = new THREE.Color(b.getAttribute('data-theme')==='dark'?0x1e1e1e:0xb0b0b0);
+            };
+
+            document.getElementById('file-input').onchange = e => {
+                const r = new FileReader();
+                r.onload = ev => {
+                    const l = new STLLoader();
+                    const g = l.parse(ev.target.result);
+                    const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({color:0x999}));
+                    m.name = e.target.files[0].name;
+                    m.rotation.x = -Math.PI/2; // Default STL orientation
+                    scene.add(m);
+                    groundObject(m); // Auto-ground
+                    importedObjects.push(m);
+                    selectedObject = m;
+                    updateLayerList();
+                };
+                r.readAsArrayBuffer(e.target.files[0]);
+            };
+            document.getElementById('btn-import').onclick = () => document.getElementById('file-input').click();
+            document.getElementById('btn-reset-view').onclick = () => { camera.position.set(2000,2000,2000); camera.lookAt(0,0,0); controls.update(); };
+            
+            // Collapsibles
+            document.querySelectorAll('.collapsible').forEach(c => c.addEventListener('click', function() {
+                this.classList.toggle('active');
+                const content = this.nextElementSibling;
+                content.classList.toggle('active');
+            }));
+        }
+
+        function updateLayerList() {
+            const l = document.getElementById('layer-list');
+            l.innerHTML = '';
+            [containerGroup, faucetMesh, ...importedObjects].forEach(obj => {
+                if(!obj) return;
+                const div = document.createElement('div');
+                div.className = 'layer-item' + (selectedObject===obj?' selected':'');
+                div.innerHTML = `<span>${obj.name}</span>`;
+                div.onclick = () => { selectedObject = obj; updateLayerList(); };
+                l.appendChild(div);
+            });
         }
 
         function onWindowResize() {
@@ -540,551 +790,21 @@
             camera.updateProjectionMatrix();
         }
 
-        // --- SIMULATION & PARTICLES ---
-        function initSimulation() {
-            // Faucet Mesh
-            faucetMesh = new THREE.Group();
-            const cone = new THREE.Mesh(
-                new THREE.ConeGeometry(100, 200, 16, 1, true),
-                new THREE.MeshStandardMaterial({ color: 0xffaa00, side: THREE.DoubleSide })
-            );
-            cone.rotation.x = Math.PI; // point down
-            faucetMesh.add(cone);
-            faucetMesh.position.set(0, SIM_HEIGHT, 0);
-            faucetMesh.visible = false;
-            faucetMesh.name = "Faucet";
-            scene.add(faucetMesh);
-
-            // Particles (Instanced Mesh)
-            const pCount = 3000;
-            const pGeo = new THREE.DodecahedronGeometry(15);
-            const pMat = new THREE.MeshLambertMaterial({ color: 0x8d6e63 });
-            particleSystem = new THREE.InstancedMesh(pGeo, pMat, pCount);
-            particleSystem.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-            scene.add(particleSystem);
-            
-            // Init particles off-screen
-            const dummy = new THREE.Object3D();
-            dummy.position.set(0, -99999, 0);
-            dummy.updateMatrix();
-            for(let i=0; i<pCount; i++) {
-                particleSystem.setMatrixAt(i, dummy.matrix);
-                particles.push({ active: false, pos: new THREE.Vector3(), vel: new THREE.Vector3() });
-            }
-            particleSystem.instanceMatrix.needsUpdate = true;
-        }
-
-        function updateSimulation(dt) {
-            if(!isSimulating) return;
-
-            const spawnCount = Math.ceil(simFlowRate * dt * 2); // primitive flow
-            let spawned = 0;
-            
-            const dummy = new THREE.Object3D();
-            const worldPos = new THREE.Vector3();
-            faucetMesh.getWorldPosition(worldPos);
-
-            // Spawn
-            for(let i=0; i<particles.length; i++) {
-                if(spawned >= spawnCount) break;
-                if(!particles[i].active) {
-                    particles[i].active = true;
-                    // Slight random spread
-                    particles[i].pos.set(
-                        worldPos.x + (Math.random()-0.5)*50, 
-                        worldPos.y - 100, 
-                        worldPos.z + (Math.random()-0.5)*50
-                    );
-                    particles[i].vel.set(0, 0, 0);
-                    spawned++;
-                }
-            }
-
-            // Update Physics
-            // Simplification: Stop if Y <= 0. Stop if inside container bounds approx fill height.
-            let stopY = 0;
-            let minX = -params.L/2, maxX = params.L/2, minZ = -params.W/2, maxZ = params.W/2;
-            let fillHeight = params.include_frame ? params.frame_h : 0; 
-            fillHeight += params.H * (params.fill_percent/100);
-
-            if(containerGroup) {
-                // Approximate check relative to container pos
-                minX += containerGroup.position.x; maxX += containerGroup.position.x;
-                minZ += containerGroup.position.z; maxZ += containerGroup.position.z;
-            }
-
-            for(let i=0; i<particles.length; i++) {
-                if(particles[i].active) {
-                    let p = particles[i];
-                    
-                    // Gravity
-                    p.vel.y += GRAVITY * dt; // mm/s
-                    p.pos.addScaledVector(p.vel, dt);
-
-                    // Collision (Simple Floor & Fill)
-                    let floor = 0;
-                    if (p.pos.x > minX && p.pos.x < maxX && p.pos.z > minZ && p.pos.z < maxZ) {
-                        floor = fillHeight + (Math.random() * 50); // Random piling surface
-                    }
-
-                    if(p.pos.y <= floor) {
-                        p.pos.y = floor;
-                        p.active = false; // Stop simulating this one, lock it
-                    }
-
-                    // Update Matrix
-                    dummy.position.copy(p.pos);
-                    dummy.updateMatrix();
-                    particleSystem.setMatrixAt(i, dummy.matrix);
-                }
-            }
-            particleSystem.instanceMatrix.needsUpdate = true;
-        }
-
-        // --- GEOMETRY ---
-        function rebuildContainer() {
-            if(containerGroup) scene.remove(containerGroup);
-            containerGroup = new THREE.Group();
-            containerGroup.name = "Container";
-
-            // Material Prep
-            const matShell = new THREE.MeshStandardMaterial({ color: 0x465c69, roughness: 0.6, metalness: 0.4, side: THREE.DoubleSide });
-            const matFrame = new THREE.MeshStandardMaterial({ color: 0x2e7d32, roughness: 0.7 });
-            const matLid = new THREE.MeshStandardMaterial({ color: 0x7f8c8d, roughness: 0.5 });
-            const matDust = new THREE.MeshBasicMaterial({ color: 0x795548, transparent: true, opacity: 0.8 });
-
-            const { L, W, H, x_hopper, t_wall, include_frame, frame_h, fill_percent } = params;
-            const y_start = include_frame ? frame_h : 0;
-
-            // 1. Main Container Shell (Extruded Shape)
-            // Shape: (0,0) -> (L,0) -> (L,H) -> (-x, H) -> (0,0)
-            const shape = new THREE.Shape();
-            shape.moveTo(0,0);
-            shape.lineTo(L,0);
-            shape.lineTo(L,H);
-            shape.lineTo(-x_hopper, H);
-            shape.lineTo(0,0);
-
-            // Walls
-            const wallGeo = new THREE.ExtrudeGeometry(shape, { depth: t_wall, bevelEnabled: false });
-            
-            // Left Wall
-            const w1 = new THREE.Mesh(wallGeo, matShell);
-            w1.position.set(0, y_start, W/2 - t_wall);
-            w1.castShadow = true; w1.receiveShadow = true;
-            
-            // Right Wall
-            const w2 = new THREE.Mesh(wallGeo, matShell);
-            w2.position.set(0, y_start, -W/2);
-            w2.castShadow = true; w2.receiveShadow = true;
-            
-            containerGroup.add(w1); containerGroup.add(w2);
-
-            // Floor (Rect Part)
-            const floor = new THREE.Mesh(new THREE.BoxGeometry(L, t_wall, W - 2*t_wall), matShell);
-            floor.position.set(L/2, y_start + t_wall/2, 0);
-            floor.castShadow = true; floor.receiveShadow = true;
-            containerGroup.add(floor);
-
-            // Back Wall (Rect End)
-            const back = new THREE.Mesh(new THREE.BoxGeometry(t_wall, H, W - 2*t_wall), matShell);
-            back.position.set(L - t_wall/2, y_start + H/2, 0);
-            back.castShadow = true; back.receiveShadow = true;
-            containerGroup.add(back);
-
-            // Front Slant Wall
-            const slantL = Math.sqrt(x_hopper*x_hopper + H*H);
-            const ang = Math.atan2(H, x_hopper);
-            const slant = new THREE.Mesh(new THREE.BoxGeometry(slantL, W - 2*t_wall, t_wall), matShell);
-            slant.rotation.x = Math.PI/2;
-            slant.rotation.y = -ang;
-            slant.position.set(-x_hopper/2, y_start + H/2, 0);
-            slant.castShadow = true; slant.receiveShadow = true;
-            containerGroup.add(slant);
-
-            // 2. Frame (Green)
-            if(include_frame) {
-                const fw = params.frame_pocket_w, fs = params.frame_pocket_s;
-                const groupW = 2*fw + fs;
-                const margin = (W - groupW)/2;
-                
-                const frameBoxSide = new THREE.BoxGeometry(L, frame_h, margin);
-                const frameBoxCenter = new THREE.BoxGeometry(L, frame_h, fs);
-                
-                const fL = new THREE.Mesh(frameBoxSide, matFrame);
-                fL.position.set(L/2, frame_h/2, W/2 - margin/2);
-                
-                const fR = new THREE.Mesh(frameBoxSide, matFrame);
-                fR.position.set(L/2, frame_h/2, -W/2 + margin/2);
-                
-                const fC = new THREE.Mesh(frameBoxCenter, matFrame);
-                fC.position.set(L/2, frame_h/2, 0);
-                
-                // Top/Bottom Plates
-                const pGeo = new THREE.BoxGeometry(L, 5, W);
-                const pTop = new THREE.Mesh(pGeo, matFrame); pTop.position.set(L/2, frame_h - 2.5, 0);
-                const pBot = new THREE.Mesh(pGeo, matFrame); pBot.position.set(L/2, 2.5, 0);
-                
-                containerGroup.add(fL, fR, fC, pTop, pBot);
-            }
-
-            // 3. Lid
-            if(params.include_lid) {
-                const ls = new THREE.Shape();
-                ls.moveTo(-x_hopper, -W/2); ls.lineTo(L, -W/2);
-                ls.lineTo(L, W/2); ls.lineTo(-x_hopper, W/2); ls.lineTo(-x_hopper, -W/2);
-                
-                const hole = new THREE.Path();
-                hole.absarc(-x_hopper + params.lid_offset, 0, params.r_hole, 0, Math.PI*2);
-                ls.holes.push(hole);
-                
-                const lid = new THREE.Mesh(new THREE.ExtrudeGeometry(ls, {depth: params.t_lid, bevelEnabled: false}), matLid);
-                lid.rotation.x = Math.PI/2;
-                lid.position.set(0, y_start + H + params.t_lid, 0);
-                lid.castShadow = true;
-                containerGroup.add(lid);
-            }
-
-            // 4. Dust Volume (Accurate Geometry)
-            if(fill_percent > 0) {
-                // Scale the H of the profile
-                const fillH = H * (fill_percent/100);
-                // Calculate x projection for this H: x' = (h'/H) * x
-                const fillX = (fillH / H) * x_hopper;
-                
-                const ds = new THREE.Shape();
-                ds.moveTo(0,0); ds.lineTo(L - t_wall, 0);
-                ds.lineTo(L - t_wall, fillH);
-                ds.lineTo(-fillX, fillH);
-                ds.lineTo(0,0);
-                
-                const dMesh = new THREE.Mesh(new THREE.ExtrudeGeometry(ds, { depth: W - 2*t_wall, bevelEnabled:false }), matDust);
-                dMesh.position.set(0, y_start + t_wall, -(W - 2*t_wall)/2);
-                // Since extrude goes in Z+, and we centered via W/2 calculation manually above, this places it inside.
-                // Center Z:
-                dMesh.position.z = - (W/2 - t_wall); 
-                
-                containerGroup.add(dMesh);
-            }
-
-            scene.add(containerGroup);
-            if(!selectedObject || (selectedObject.parent !== scene && selectedObject !== containerGroup)) {
-                selectedObject = containerGroup;
-            }
-            
-            calculatePhysics();
-            updateLayerList();
-        }
-
-        function calculatePhysics() {
-            const { L, W, H, x_hopper, t_wall, fill_percent, frame_h, include_frame } = params;
-            const s = 0.001; // mm to m
-            
-            // Vols
-            const v_rect = (L - 2*t_wall) * (W - 2*t_wall) * (H - t_wall) * s**3;
-            const v_tri = 0.5 * x_hopper * (H - t_wall) * (W - 2*t_wall) * s**3;
-            const v_total = v_rect + v_tri;
-            const v_fill = v_total * (fill_percent / 100);
-            
-            // Mass
-            const rho_shell = params.rho_shell;
-            const rho_dust = params.rho_dust;
-            
-            // Shell Approx Volume (Surface area * thickness)
-            // Simplification: Outer Vol - Inner Vol (ignoring thickness overlaps roughly)
-            const v_out_total = (L*W*H + 0.5*x_hopper*H*W) * s**3;
-            const v_shell_mat = Math.max(0, v_out_total - v_total);
-            
-            // Frame Mass
-            let m_frame = 0;
-            if(include_frame) {
-                m_frame = (L*W*frame_h*s**3 * 0.3) * rho_shell; // 30% solid
-            }
-            
-            const m_shell = (v_shell_mat * rho_shell) + m_frame;
-            const m_dust = v_fill * rho_dust;
-            
-            // CoG
-            const cx_rect = L/2; 
-            const cx_tri = -x_hopper/3; 
-            const m_rect = (v_rect/v_total) * m_shell; 
-            const m_tri = (v_tri/v_total) * m_shell;
-            
-            const cogX_e = (m_rect*cx_rect + m_tri*cx_tri) / (m_rect+m_tri);
-            const cogY_e = (include_frame ? frame_h : 0) + H/3;
-            
-            // Simple Fill Logic
-            const cogX_f = cogX_e;
-            const cogY_f = (include_frame ? frame_h : 0) + (H * (fill_percent/100) / 2);
-
-            // Update UI
-            document.getElementById('val-vol-int').innerText = v_total.toFixed(3) + " m³";
-            document.getElementById('val-vol-fill').innerText = v_fill.toFixed(3) + " m³";
-            document.getElementById('val-mass-shell').innerText = m_shell.toFixed(1) + " kg";
-            document.getElementById('val-mass-dust').innerText = m_dust.toFixed(1) + " kg";
-            document.getElementById('val-mass-total').innerText = (m_shell + m_dust).toFixed(1) + " kg";
-            
-            document.getElementById('val-cog-empty').innerText = `${(cogX_e/1000).toFixed(2)}, ${(cogY_e/1000).toFixed(2)}`;
-            document.getElementById('val-cog-filled').innerText = `${(cogX_f/1000).toFixed(2)}, ${(cogY_f/1000).toFixed(2)}`;
-
-            localCoG_E.set(cogX_e, cogY_e, 0);
-            localCoG_F.set(cogX_f, cogY_f, 0);
-        }
-
-        // --- CONTROLS & INPUT ---
-        function handleKey(e, down) {
-            const k = e.key.toLowerCase();
-            if(keys.hasOwnProperty(k)) keys[k] = down;
-        }
-
-        function onMouseClick(e) {
-            const rect = renderer.domElement.getBoundingClientRect();
-            const m = new THREE.Vector2(
-                ((e.clientX - rect.left)/rect.width)*2 - 1,
-                -((e.clientY - rect.top)/rect.height)*2 + 1
-            );
-            const ray = new THREE.Raycaster();
-            ray.setFromCamera(m, camera);
-            const hits = ray.intersectObjects(scene.children, true);
-            if(hits.length > 0) {
-                // Walk up to root
-                let obj = hits[0].object;
-                while(obj.parent && obj.parent !== scene) obj = obj.parent;
-                
-                if(obj !== gridHelper && obj !== refCube && !obj.isArrow) {
-                    selectedObject = obj;
-                    log("Selected: " + (obj.name || "Object"));
-                    updateLayerList();
-                }
-            }
-        }
-
-        function updateMovement() {
-            // Target object: Faucet if Sim Mode, else Selected Object
-            const target = (simMode && faucetMesh) ? faucetMesh : selectedObject;
-            if(!target) return;
-
-            const step = params.move_step * 0.1; // speed
-            const camDir = new THREE.Vector3();
-            camera.getWorldDirection(camDir);
-            camDir.y = 0; 
-            camDir.normalize();
-
-            // W moves AWAY from camera, S moves TOWARDS
-            // We calculate Forward based on camera looking at 0,0
-            const fwd = camDir.clone();
-            const right = new THREE.Vector3().crossVectors(new THREE.Vector3(0,1,0), fwd).normalize();
-            
-            // In Ortho/Iso, we align slightly to grid for clean movement
-            if(Math.abs(fwd.x) > Math.abs(fwd.z)) { fwd.set(Math.sign(fwd.x), 0, 0); } 
-            else { fwd.set(0, 0, Math.sign(fwd.z)); }
-            
-            if(Math.abs(right.x) > Math.abs(right.z)) { right.set(Math.sign(right.x), 0, 0); }
-            else { right.set(0, 0, Math.sign(right.z)); }
-
-            const move = new THREE.Vector3();
-            if(keys.w) move.add(fwd); // Forward (away)
-            if(keys.s) move.sub(fwd); // Backward (toward)
-            if(keys.a) move.add(right); // Left
-            if(keys.d) move.sub(right); // Right
-
-            if(move.lengthSq() > 0) {
-                move.normalize().multiplyScalar(params.move_step);
-                // Debounce-ish / Grid snap simulation
-                // We add full step on keypress frame in simple logic, 
-                // but for smooth loop we add fraction. 
-                // To strictly match "WASD Grid", we increment pos:
-                target.position.addScalar(0); // dummy
-                
-                // Smooth float move
-                target.position.x += move.x * 0.1; 
-                target.position.z += move.z * 0.1;
-
-                // Grid Snap check (only on stop? or continuously?)
-                // continuous snapping feels jerky. Let's just float move.
-                
-                // Update CoG arrows
-                checkCollisions();
-            }
-        }
-
-        // --- RENDER LOOP ---
         function animate(time) {
             requestAnimationFrame(animate);
-            
             const dt = (time - lastTime)/1000;
             lastTime = time;
-
             updateMovement();
             updateSimulation(dt);
-            
-            if(containerGroup) {
-                cogArrowEmpty.visible = params.show_cog_e;
-                cogArrowFilled.visible = params.show_cog_f;
-                cogArrowEmpty.position.copy(containerGroup.position).add(localCoG_E);
-                cogArrowFilled.position.copy(containerGroup.position).add(localCoG_F);
-            }
-
             renderer.render(scene, camera);
             controls.update();
         }
 
-        // --- UTILS & IO ---
-        function log(msg) {
-            const el = document.getElementById('log-content');
-            el.innerText = `[${new Date().toLocaleTimeString()}] ${msg}\n` + el.innerText;
-        }
-
-        function toggleTheme() {
-            const body = document.body;
-            const cur = body.getAttribute('data-theme');
-            const next = cur === 'light' ? 'dark' : 'light';
-            body.setAttribute('data-theme', next);
-            
-            if(next === 'dark') {
-                scene.background = new THREE.Color(0x1a1a1a);
-                gridHelper.material.color.setHex(0x444444);
-            } else {
-                scene.background = new THREE.Color(0xc0c0c0);
-                gridHelper.material.color.setHex(0x666666);
-            }
-        }
-
-        function checkCollisions() {
-            if(!containerGroup) return;
-            const box1 = new THREE.Box3().setFromObject(containerGroup);
-            collisionBoxes.forEach(b => scene.remove(b));
-            collisionBoxes = [];
-            document.getElementById('collision-alert').style.display = 'none';
-
-            importedObjects.forEach(obj => {
-                const box2 = new THREE.Box3().setFromObject(obj);
-                if(box1.intersectsBox(box2)) {
-                    const inter = box1.clone().intersect(box2);
-                    const w = inter.max.x - inter.min.x;
-                    const h = inter.max.y - inter.min.y;
-                    const d = inter.max.z - inter.min.z;
-                    const vol = (w*h*d)/1e6;
-                    
-                    if(params.show_collisions) {
-                        const mesh = new THREE.Mesh(
-                            new THREE.BoxGeometry(w,h,d),
-                            new THREE.MeshBasicMaterial({color: 0xff0000, transparent:true, opacity:0.5})
-                        );
-                        mesh.position.copy(inter.min).add(new THREE.Vector3(w/2, h/2, d/2));
-                        scene.add(mesh);
-                        collisionBoxes.push(mesh);
-                        document.getElementById('val-col-vol').innerText = vol.toFixed(2) + " L";
-                        document.getElementById('collision-alert').style.display = 'flex';
-                    }
-                }
-            });
-        }
-
-        // Standard Helpers (Binding UI)
-        function setupUI() {
-            const bind = (id, k, fn) => {
-                const el = document.getElementById(id);
-                if(el) el.addEventListener('input', e => {
-                    params[k] = (el.type==='checkbox') ? el.checked : parseFloat(el.value);
-                    if(document.getElementById('num-'+k.split('_')[1])) 
-                        document.getElementById('num-'+k.split('_')[1]).value = params[k];
-                    if(fn) fn();
-                });
-            };
-            
-            ['L','W','H','XHop','Thick'].forEach(x => {
-                const id = 'inp-'+x;
-                const num = 'num-'+x;
-                const k = (x==='XHop')?'x_hopper':(x==='Thick'?'t_wall':x);
-                document.getElementById(id).addEventListener('input', e=>{
-                    params[k] = parseFloat(e.target.value);
-                    document.getElementById(num).value = params[k];
-                    rebuildContainer();
-                });
-            });
-
-            document.getElementById('chk-frame').onchange = e => {
-                params.include_frame = e.target.checked;
-                document.getElementById('frame-controls').style.display = e.target.checked?'block':'none';
-                rebuildContainer();
-            };
-            
-            document.getElementById('chk-sim-mode').onchange = e => {
-                simMode = e.target.checked;
-                faucetMesh.visible = simMode;
-                selectedObject = simMode ? faucetMesh : containerGroup;
-                log(simMode ? "Sim Mode: Use WASD to move Faucet." : "Design Mode.");
-            };
-
-            document.getElementById('btn-sim-start').onclick = () => isSimulating = true;
-            document.getElementById('btn-sim-stop').onclick = () => isSimulating = false;
-            document.getElementById('btn-sim-clear').onclick = () => {
-                particles.forEach(p => { p.active = false; p.pos.set(0,-99999,0); });
-                isSimulating = false;
-            };
-            
-            document.getElementById('inp-flow').oninput = e => simFlowRate = parseFloat(e.target.value);
-            document.getElementById('btn-theme').onclick = toggleTheme;
-            
-            document.getElementById('file-input').onchange = e => {
-                const reader = new FileReader();
-                reader.onload = ev => {
-                    const l = new STLLoader();
-                    const g = l.parse(ev.target.result);
-                    g.center();
-                    g.computeBoundingBox();
-                    g.translate(0, -g.boundingBox.min.y, 0);
-                    const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({color:0x999}));
-                    m.rotation.x = -Math.PI/2;
-                    scene.add(m);
-                    importedObjects.push(m);
-                    updateLayerList();
-                };
-                reader.readAsArrayBuffer(e.target.files[0]);
-            };
-            document.getElementById('btn-import').onclick = () => document.getElementById('file-input').click();
-            
-            document.getElementById('btn-reset-view').onclick = () => {
-                camera.position.set(2000,2000,2000); camera.lookAt(0,0,0); controls.update();
-            };
-
-            const coll = document.getElementsByClassName("collapsible");
-            for (let i = 0; i < coll.length; i++) {
-                coll[i].addEventListener("click", function() {
-                    this.classList.toggle("active");
-                    const content = this.nextElementSibling;
-                    if (content.style.maxHeight) content.style.maxHeight = null;
-                    else content.style.maxHeight = content.scrollHeight + "px";
-                });
-            }
-        }
-
-        function updateLayerList() {
-            const l = document.getElementById('layer-list');
-            l.innerHTML = '';
-            [containerGroup, faucetMesh, ...importedObjects].forEach(obj => {
-                if(!obj) return;
-                const div = document.createElement('div');
-                div.className = 'layer-item' + (selectedObject===obj?' selected':'');
-                div.innerText = obj.name || "Object";
-                div.onclick = () => { selectedObject = obj; updateLayerList(); };
-                l.appendChild(div);
-            });
-        }
-
-        function saveState() { localStorage.setItem('dce_v6', JSON.stringify(params)); }
-        function loadState() { 
-            try { 
-                const p = JSON.parse(localStorage.getItem('dce_v6'));
-                if(p) params = {...DEFAULTS, ...p};
-            } catch(e){}
-        }
-        function pushHistory() { /* Simple stub */ }
+        function log(msg) { document.getElementById('log-content').innerText = `[${new Date().toLocaleTimeString()}] ${msg}\n` + document.getElementById('log-content').innerText; }
+        function saveState() { localStorage.setItem('dce_v7', JSON.stringify(params)); }
+        function loadState() { try { const p = JSON.parse(localStorage.getItem('dce_v7')); if(p) params = {...DEFAULTS, ...p}; } catch(e){} }
 
         setInterval(saveState, 3000);
-        
-        // Start
         init();
     </script>
 </body>
