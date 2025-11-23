@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dust Container Engineer - Ultimate V7</title>
+    <title>Dust Container Engineer - V8 (Final)</title>
     
     <style>
         :root {
@@ -14,7 +14,6 @@
             --accent: #007acc;
             --accent-hover: #005fa3;
             --danger: #c0392b;
-            --success: #27ae60;
             --input-bg: #fff;
             --header-bg: #e0e0e0;
         }
@@ -154,7 +153,7 @@
 
     <div id="sidebar">
         <div class="panel-header">
-            <h2>Dust Engineer V7</h2>
+            <h2>Dust Engineer V8</h2>
             <div style="display:flex; gap:5px;">
                 <button class="icon-btn" id="btn-theme" title="Toggle Dark Mode">◑</button>
                 <button class="icon-btn" id="btn-undo" title="Undo">↶</button>
@@ -175,6 +174,9 @@
                 <div class="stat-divider"></div>
                 <div class="stat-row"><span>CoG (Empty):</span><span class="stat-val" id="val-cog-empty">-</span></div>
                 <div class="stat-row"><span>CoG (Filled):</span><span class="stat-val" id="val-cog-filled">-</span></div>
+                <div class="stat-row" id="collision-alert" style="color:var(--danger); display:none; margin-top:5px;">
+                    <span>⚠ Collision:</span><span class="stat-val" id="val-col-vol">0 L</span>
+                </div>
             </div>
 
             <!-- GEOMETRY -->
@@ -223,6 +225,10 @@
                 </div>
                 
                 <div class="input-row" style="margin-top:10px; border-top:1px solid var(--panel-border); padding-top:5px;">
+                    <label>Show Static Fill</label>
+                    <input type="checkbox" id="chk-show-fill" checked>
+                </div>
+                <div class="input-row">
                     <label>Static Fill %</label>
                     <input type="range" id="inp-Fill" min="0" max="100" value="80">
                     <span id="lbl-Fill">80%</span>
@@ -240,6 +246,7 @@
                 
                 <div class="control-group" style="border:none; margin:0;">
                     <h4>Selected Transform</h4>
+                    <div class="input-row"><label>Scale</label><input type="range" id="inp-scale" min="0.1" max="3.0" step="0.1" value="1.0"></div>
                     <div style="display:flex; gap:5px;">
                         <button class="btn-secondary" onclick="rotateSelected('x')">Rot X</button>
                         <button class="btn-secondary" onclick="rotateSelected('y')">Rot Y</button>
@@ -314,7 +321,7 @@
             t_lid: 3, r_hole: 150, lid_offset: 300,
             rho_shell: 7850, rho_dust: 1850, fill_percent: 80,
             move_step: 50, snap: true, show_collisions: true,
-            show_cog_e: false, show_cog_f: true
+            show_cog_e: false, show_cog_f: true, show_dust_mesh: true
         };
         let params = { ...DEFAULTS };
         const keys = { w: false, a: false, s: false, d: false };
@@ -326,6 +333,7 @@
         let collisionBoxes = [];
         let selectedObject = null;
         let refCube, cogArrowEmpty, cogArrowFilled;
+        let clock = new THREE.Clock();
         
         // Simulation
         let simMode = false;
@@ -333,9 +341,12 @@
         let particles = [];
         let particleSystem;
         let simFlowRate = 10;
-        let lastTime = 0;
-        let heightMap = []; // For accumulation
-        const GRID_RES = 40; // Resolution of accumulation grid
+        let heightMap = []; 
+        const GRID_RES = 40;
+
+        // CoG
+        let localCoG_E = new THREE.Vector3();
+        let localCoG_F = new THREE.Vector3();
 
         // --- INIT ---
         function init() {
@@ -345,7 +356,7 @@
             rebuildContainer();
             initSimulation();
             requestAnimationFrame(animate);
-            log("V7 Engine Started.");
+            log("V8 Engine Started.");
         }
 
         function initThree() {
@@ -407,7 +418,7 @@
             const { L, W, H, x_hopper, t_wall, include_frame, frame_h, fill_percent } = params;
             const y_start = include_frame ? frame_h : 0;
 
-            // 1. Shell (Stitched: Rect + Overhang Wedge)
+            // Shell
             const shape = new THREE.Shape();
             shape.moveTo(0,0); shape.lineTo(L,0); shape.lineTo(L,H);
             shape.lineTo(-x_hopper, H); shape.lineTo(0,0);
@@ -433,7 +444,7 @@
             slant.position.set(-x_hopper/2, y_start + H/2, 0); slant.castShadow = true;
             containerGroup.add(slant);
 
-            // 2. Frame
+            // Frame
             if(include_frame) {
                 frameGroup = new THREE.Group();
                 const fw = params.frame_pocket_w, fs = params.frame_pocket_s;
@@ -455,7 +466,7 @@
                 containerGroup.add(frameGroup);
             }
 
-            // 3. Lid
+            // Lid
             if(params.include_lid) {
                 const ls = new THREE.Shape();
                 ls.moveTo(-x_hopper, -W/2); ls.lineTo(L, -W/2);
@@ -468,8 +479,8 @@
                 lid.castShadow = true; containerGroup.add(lid);
             }
 
-            // 4. Dust Fill
-            if(fill_percent > 0) {
+            // Dust Fill (Static)
+            if(fill_percent > 0 && params.show_dust_mesh) {
                 const fillH = H * (fill_percent/100);
                 const fillX = (fillH / H) * x_hopper;
                 const ds = new THREE.Shape();
@@ -508,13 +519,8 @@
             document.getElementById('val-mass-dust').innerText = m_dust.toFixed(1) + " kg";
             document.getElementById('val-mass-total').innerText = (m_shell + m_dust).toFixed(1) + " kg";
             
-            if(containerGroup) {
-                cogArrowEmpty.visible = params.show_cog_e;
-                cogArrowFilled.visible = params.show_cog_f;
-                const pos = containerGroup.position.clone();
-                cogArrowEmpty.position.set(pos.x + cogX, pos.y + cogY, pos.z);
-                cogArrowFilled.position.set(pos.x + cogX, pos.y + cogY + (H*fill_percent/200), pos.z);
-            }
+            localCoG_E.set(cogX, cogY, 0);
+            localCoG_F.set(cogX, cogY + (H*fill_percent/200), 0);
         }
 
         // --- SIMULATION ---
@@ -540,8 +546,6 @@
                 particles.push({ active:false, pos:new THREE.Vector3(), vel:new THREE.Vector3() });
             }
             particleSystem.instanceMatrix.needsUpdate = true;
-            
-            // Init Height Map
             heightMap = new Float32Array(GRID_RES * GRID_RES).fill(0);
         }
 
@@ -554,7 +558,6 @@
             const worldPos = new THREE.Vector3();
             faucetMesh.getWorldPosition(worldPos);
 
-            // Spawn
             for(let i=0; i<particles.length; i++) {
                 if(spawned >= spawnRate) break;
                 if(!particles[i].active) {
@@ -565,7 +568,6 @@
                 }
             }
 
-            // Physics
             const bounds = new THREE.Box3().setFromObject(containerGroup);
             const floorY = params.include_frame ? params.frame_h : 0;
             
@@ -576,32 +578,24 @@
                     p.pos.addScaledVector(p.vel, dt);
 
                     let stopY = 0;
-                    // Check if inside container X/Z
                     if(p.pos.x > bounds.min.x && p.pos.x < bounds.max.x && p.pos.z > bounds.min.z && p.pos.z < bounds.max.z) {
                         stopY = floorY + params.t_wall;
                         if(type === 'accumulate') {
-                            // Map to grid
                             const gx = Math.floor(((p.pos.x - bounds.min.x) / (bounds.max.x - bounds.min.x)) * GRID_RES);
                             const gz = Math.floor(((p.pos.z - bounds.min.z) / (bounds.max.z - bounds.min.z)) * GRID_RES);
-                            if(gx>=0 && gx<GRID_RES && gz>=0 && gz<GRID_RES) {
-                                stopY += heightMap[gz * GRID_RES + gx];
-                            }
+                            if(gx>=0 && gx<GRID_RES && gz>=0 && gz<GRID_RES) stopY += heightMap[gz * GRID_RES + gx];
                         }
                     }
 
                     if(p.pos.y <= stopY) {
                         p.pos.y = stopY;
-                        p.active = false; // Stop moving
+                        p.active = false;
                         if(type === 'accumulate' && stopY > 0) {
-                            // Add to height map
                             const gx = Math.floor(((p.pos.x - bounds.min.x) / (bounds.max.x - bounds.min.x)) * GRID_RES);
                             const gz = Math.floor(((p.pos.z - bounds.min.z) / (bounds.max.z - bounds.min.z)) * GRID_RES);
-                            if(gx>=0 && gx<GRID_RES && gz>=0 && gz<GRID_RES) {
-                                heightMap[gz * GRID_RES + gx] += 15; // particle size
-                            }
+                            if(gx>=0 && gx<GRID_RES && gz>=0 && gz<GRID_RES) heightMap[gz * GRID_RES + gx] += 15;
                         }
                     }
-                    
                     dummy.position.copy(p.pos);
                     dummy.updateMatrix();
                     particleSystem.setMatrixAt(i, dummy.matrix);
@@ -610,15 +604,14 @@
             particleSystem.instanceMatrix.needsUpdate = true;
         }
 
-        // --- INPUT & MOVEMENT ---
-        function updateMovement() {
+        // --- INPUT ---
+        function updateMovement(dt) {
             if(!selectedObject) return;
-            const step = params.move_step * 0.1;
+            const step = params.move_step * 5 * dt; // Smooth speed
             const camDir = new THREE.Vector3();
             camera.getWorldDirection(camDir);
             camDir.y = 0; camDir.normalize();
 
-            // Robust Camera Relative Vectors
             let fwd = new THREE.Vector3(0,0,-1);
             if(Math.abs(camDir.x) > Math.abs(camDir.z)) fwd.set(Math.sign(camDir.x), 0, 0);
             else fwd.set(0, 0, Math.sign(camDir.z));
@@ -632,13 +625,10 @@
             if(keys.d) move.sub(right);
 
             if(move.lengthSq() > 0) {
-                move.normalize().multiplyScalar(params.move_step);
-                selectedObject.position.x += move.x * 0.1;
-                selectedObject.position.z += move.z * 0.1;
-                
+                move.normalize().multiplyScalar(step);
+                selectedObject.position.add(move);
                 if(params.snap) {
-                    // Soft snap visual
-                    // selectedObject.position.x = Math.round(selectedObject.position.x / 50) * 50;
+                    // Soft snap logic if needed, currently free move on grid
                 }
                 checkCollisions();
             }
@@ -664,15 +654,13 @@
         window.rotateSelected = (axis) => {
             if(!selectedObject) return;
             selectedObject.rotation[axis] += Math.PI/2;
-            // Re-ground if it's an imported object
             if(importedObjects.includes(selectedObject)) groundObject(selectedObject);
             checkCollisions();
         };
 
         function groundObject(mesh) {
             const box = new THREE.Box3().setFromObject(mesh);
-            const yMin = box.min.y;
-            mesh.position.y -= yMin; // Shift down/up to 0
+            mesh.position.y -= box.min.y;
         }
 
         function checkCollisions() {
@@ -697,7 +685,7 @@
             });
         }
 
-        // --- UI BINDING ---
+        // --- UI ---
         function setupUI() {
             const bind = (id, k, fn) => {
                 const el = document.getElementById(id);
@@ -715,6 +703,7 @@
             document.getElementById('chk-frame').onchange = e => { params.include_frame = e.target.checked; document.getElementById('frame-controls').style.display = e.target.checked?'block':'none'; rebuildContainer(); };
             document.getElementById('chk-lid').onchange = e => { params.include_lid = e.target.checked; rebuildContainer(); };
             document.getElementById('inp-Fill').oninput = e => { params.fill_percent = parseFloat(e.target.value); document.getElementById('lbl-Fill').innerText = params.fill_percent+"%"; rebuildContainer(); };
+            document.getElementById('chk-show-fill').onchange = e => { params.show_dust_mesh = e.target.checked; rebuildContainer(); };
             
             document.getElementById('chk-sim-mode').onchange = e => {
                 simMode = e.target.checked;
@@ -733,12 +722,22 @@
                 particleSystem.instanceMatrix.needsUpdate = true;
             };
             document.getElementById('inp-flow').oninput = e => simFlowRate = parseFloat(e.target.value);
+            document.getElementById('inp-scale').oninput = e => {
+                if(selectedObject && importedObjects.includes(selectedObject)) {
+                    const s = parseFloat(e.target.value);
+                    selectedObject.scale.set(s,s,s);
+                    groundObject(selectedObject);
+                    checkCollisions();
+                }
+            };
 
             document.getElementById('btn-theme').onclick = () => {
                 const b = document.body;
                 b.setAttribute('data-theme', b.getAttribute('data-theme')==='light'?'dark':'light');
                 scene.background = new THREE.Color(b.getAttribute('data-theme')==='dark'?0x1e1e1e:0xb0b0b0);
             };
+
+            document.getElementById('chk-ref').onchange = e => refCube.visible = e.target.checked;
 
             document.getElementById('file-input').onchange = e => {
                 const r = new FileReader();
@@ -747,9 +746,9 @@
                     const g = l.parse(ev.target.result);
                     const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({color:0x999}));
                     m.name = e.target.files[0].name;
-                    m.rotation.x = -Math.PI/2; // Default STL orientation
+                    m.rotation.x = -Math.PI/2; 
                     scene.add(m);
-                    groundObject(m); // Auto-ground
+                    groundObject(m);
                     importedObjects.push(m);
                     selectedObject = m;
                     updateLayerList();
@@ -759,11 +758,9 @@
             document.getElementById('btn-import').onclick = () => document.getElementById('file-input').click();
             document.getElementById('btn-reset-view').onclick = () => { camera.position.set(2000,2000,2000); camera.lookAt(0,0,0); controls.update(); };
             
-            // Collapsibles
             document.querySelectorAll('.collapsible').forEach(c => c.addEventListener('click', function() {
                 this.classList.toggle('active');
-                const content = this.nextElementSibling;
-                content.classList.toggle('active');
+                this.nextElementSibling.classList.toggle('active');
             }));
         }
 
@@ -790,19 +787,27 @@
             camera.updateProjectionMatrix();
         }
 
-        function animate(time) {
+        function animate() {
             requestAnimationFrame(animate);
-            const dt = (time - lastTime)/1000;
-            lastTime = time;
-            updateMovement();
+            const dt = clock.getDelta();
+            updateMovement(dt);
             updateSimulation(dt);
+            
+            if(containerGroup) {
+                cogArrowEmpty.visible = params.show_cog_e;
+                cogArrowFilled.visible = params.show_cog_f;
+                const pos = containerGroup.position.clone();
+                cogArrowEmpty.position.copy(pos).add(localCoG_E);
+                cogArrowFilled.position.copy(pos).add(localCoG_F);
+            }
+
             renderer.render(scene, camera);
             controls.update();
         }
 
         function log(msg) { document.getElementById('log-content').innerText = `[${new Date().toLocaleTimeString()}] ${msg}\n` + document.getElementById('log-content').innerText; }
-        function saveState() { localStorage.setItem('dce_v7', JSON.stringify(params)); }
-        function loadState() { try { const p = JSON.parse(localStorage.getItem('dce_v7')); if(p) params = {...DEFAULTS, ...p}; } catch(e){} }
+        function saveState() { localStorage.setItem('dce_v8', JSON.stringify(params)); }
+        function loadState() { try { const p = JSON.parse(localStorage.getItem('dce_v8')); if(p) params = {...DEFAULTS, ...p}; } catch(e){} }
 
         setInterval(saveState, 3000);
         init();
